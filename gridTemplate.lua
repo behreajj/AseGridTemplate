@@ -13,7 +13,8 @@ local defaults = {
     hChecker = 16,
     xChecker = 0,
     yChecker = 0,
-    layerColorBlue = 128,
+    layerColorBlue01 = 64,
+    layerColorBlue02 = 128,
     frames = 1,
     fps = 12,
     layerColorAlpha = 96
@@ -24,7 +25,6 @@ local dlg = Dialog { title = "Grid Template" }
 dlg:slider {
     id = "cols",
     label = "Cells:",
-    -- label = "Columns:",
     min = 1,
     max = 32,
     value = defaults.cols
@@ -32,7 +32,6 @@ dlg:slider {
 
 dlg:slider {
     id = "rows",
-    -- label = "Rows:",
     min = 1,
     max = 32,
     value = defaults.rows
@@ -242,7 +241,8 @@ dlg:button {
         local fps = args.fps
             or defaults.fps --[[@as integer]]
 
-        local layerColorBlue = defaults.layerColorBlue
+        local layerColorBlue01 = defaults.layerColorBlue01
+        local layerColorBlue02 = defaults.layerColorBlue02
         local layerColorAlpha = defaults.layerColorAlpha
 
         local aChecker = args.aChecker --[[@as Color]]
@@ -268,32 +268,34 @@ dlg:button {
         local useBkg = bkgClr.alpha > 0
         local useBdr = borderClr.alpha > 0 and border > 0
         local oneFrame = frameReqs <= 1
+        if not useBdr then border = 0 end
 
         local aHex = aChecker.rgbaPixel | 0xff000000
         local bHex = bChecker.rgbaPixel | 0xff000000
         local bkgHex = bkgClr.rgbaPixel | 0xff000000
-        local bdrHex = borderClr.rgbaPixel | 0xff000000
+
+        -- TODO: Change as new elements are added to each cell.
+        local wCellTotal = cwVrf + border2
+        local hCellTotal = chVrf + border2
 
         local spriteWidth = margin2
-            + cwVrf * cols
-            + border2 * cols
+            + wCellTotal * cols
             + padding * colsn1
         local spriteHeight = margin2
-            + chVrf * rows
-            + border2 * rows
+            + hCellTotal * rows
             + padding * rowsn1
         local activeSprite = Sprite(spriteWidth, spriteHeight)
         local activeLayer = activeSprite.layers[1]
         app.command.LoadPalette { preset = "default" }
 
         local spriteSpec = activeSprite.spec
-        local cellSpec = ImageSpec(spriteSpec)
-        cellSpec.width = cwVrf
-        cellSpec.height = chVrf
-        local cellImage = Image(cellSpec)
+        local checkSpec = ImageSpec(spriteSpec)
+        checkSpec.width = cwVrf
+        checkSpec.height = chVrf
+        local checkImage = Image(checkSpec)
 
         if wCheck > 0 and hCheck > 0 and aHex ~= bHex then
-            local pxItr = cellImage:pixels()
+            local pxItr = checkImage:pixels()
             for pixel in pxItr do
                 local xPx = pixel.x - xCheck
                 local yPx = pixel.y - yCheck
@@ -304,26 +306,43 @@ dlg:button {
                 pixel(hex)
             end
         else
-            cellImage:clear(aHex)
+            checkImage:clear(aHex)
         end
 
+        local bdrImage = nil
         if useBdr then
-            -- TODO: Baking the border into the
-            -- image messes with the auto guiding.
-            -- Maybe make each column a group,
-            -- then offset?
+            local bdrHex = borderClr.rgbaPixel | 0xff000000
+
             local bdrSpec = ImageSpec(spriteSpec)
-            bdrSpec.width = cwVrf + border2
-            bdrSpec.height = chVrf + border2
-            local bdrImage = Image(bdrSpec)
+            local wBordered = cwVrf + border2
+            local hBordered = chVrf + border2
+            bdrSpec.width = wBordered
+            bdrSpec.height = hBordered
+            bdrImage = Image(bdrSpec)
 
-            bdrImage:clear(bdrHex)
-            bdrImage:drawImage(cellImage,
-                Point(border, border))
+            local topRect = Rectangle(
+                0, 0,
+                wBordered - border, border)
+            local topItr = bdrImage:pixels(topRect)
+            for pixel in topItr do pixel(bdrHex) end
 
-            cellImage = bdrImage
-            cwVrf = bdrSpec.width
-            chVrf = bdrSpec.height
+            local rgtRect = Rectangle(
+                wBordered - border, 0,
+                border, hBordered - border)
+            local rgtItr = bdrImage:pixels(rgtRect)
+            for pixel in rgtItr do pixel(bdrHex) end
+
+            local btmRect = Rectangle(
+                border, hBordered - border,
+                wBordered - border, border)
+            local btmItr = bdrImage:pixels(btmRect)
+            for pixel in btmItr do pixel(bdrHex) end
+
+            local lftRect = Rectangle(
+                0, border,
+                border, hBordered - border)
+            local lftItr = bdrImage:pixels(lftRect)
+            for pixel in lftItr do pixel(bdrHex) end
         end
 
         local gridGroup = nil
@@ -355,55 +374,110 @@ dlg:button {
         local transact = app.transaction
 
         ---@type Point[]
-        local points = {}
-
+        local bdrPoints = {}
         ---@type Layer[]
-        local layers = {}
+        local bdrLayers = {}
+
+        ---@type Point[]
+        local checkPoints = {}
+        ---@type Layer[]
+        local checkLayers = {}
 
         local row = -1
         while row < rowsn1 do
             row = row + 1
 
             local yOffset = margin + row * padding
-            local y = row * chVrf + yOffset
+            local y = row * hCellTotal + yOffset
             local green = floor(row * rowToGreen + 0.5)
 
+            local rowColor = Color {
+                r = 128,
+                g = green,
+                b = 0,
+                a = layerColorAlpha
+            }
+
             local rowGroup = nil
-            local rowName = strfmt("Row %02d", row + 1)
+            local rowName = strfmt("Row %02d", 1 + row)
             transact(function()
                 rowGroup = activeSprite:newGroup()
                 rowGroup.name = rowName
                 rowGroup.parent = gridGroup
                 rowGroup.isCollapsed = true
                 rowGroup.isEditable = false
+                rowGroup.color = rowColor
+            end)
 
+            transact(function()
                 local col = -1
                 while col < colsn1 do
                     col = col + 1
 
                     local xOffset = margin + col * padding
-                    local x = col * cwVrf + xOffset
+                    local x = col * wCellTotal + xOffset
                     local red = floor(col * colToRed + 0.5)
 
                     local colColor = Color {
                         r = red,
                         g = green,
-                        b = layerColorBlue,
+                        b = 0,
                         a = layerColorAlpha
                     }
 
-                    local colLayer = nil
-                    colLayer = activeSprite:newLayer()
-                    colLayer.name = strfmt("[%02d, %02d]", col + 1, row + 1)
-                    colLayer.parent = rowGroup
-                    colLayer.color = colColor
-                    colLayer.opacity = opacity
-                    colLayer.isEditable = false
-                    colLayer.isContinuous = oneFrame
+                    local colGroup = nil
+                    colGroup = activeSprite:newGroup()
+                    colGroup.name = strfmt(
+                        "Cell %02d %02d",
+                        1 + col, 1 + row)
+                    colGroup.parent = rowGroup
+                    colGroup.isCollapsed = true
+                    colGroup.isEditable = false
+                    colGroup.color = colColor
 
                     local flatIdx = col + row * cols
-                    points[1 + flatIdx] = Point(x, y)
-                    layers[1 + flatIdx] = colLayer
+
+                    if useBdr then
+                        local bdrColor = Color {
+                            r = red,
+                            g = green,
+                            b = layerColorBlue01,
+                            a = layerColorAlpha
+                        }
+
+                        local bdrLayer = nil
+                        bdrLayer = activeSprite:newLayer()
+                        bdrLayer.name = strfmt(
+                            "Border %04d",
+                            1 + flatIdx)
+                        bdrLayer.parent = colGroup
+                        bdrLayer.isContinuous = oneFrame
+                        bdrLayer.opacity = opacity
+                        bdrLayer.color = bdrColor
+
+                        bdrPoints[1 + flatIdx] = Point(x, y)
+                        bdrLayers[1 + flatIdx] = bdrLayer
+                    end
+
+                    local checkColor = Color {
+                        r = red,
+                        g = green,
+                        b = layerColorBlue02,
+                        a = layerColorAlpha
+                    }
+
+                    local checkLayer = nil
+                    checkLayer = activeSprite:newLayer()
+                    checkLayer.name = strfmt(
+                        "Checker %04d",
+                        1 + flatIdx)
+                    checkLayer.parent = colGroup
+                    checkLayer.isContinuous = oneFrame
+                    checkLayer.opacity = opacity
+                    checkLayer.color = checkColor
+
+                    checkPoints[1 + flatIdx] = Point(x + border, y + border)
+                    checkLayers[1 + flatIdx] = checkLayer
                 end
             end)
         end
@@ -441,17 +515,31 @@ dlg:button {
         local i = 0
         while i < gridFlat do
             i = i + 1
-            local point = points[i]
-            local layer = layers[i]
+            local checkPoint = checkPoints[i]
+            local checkLayer = checkLayers[i]
 
             app.transaction(function()
                 local j = 0
                 while j < lenFrames do
                     j = j + 1
                     activeSprite:newCel(
-                        layer, j, cellImage, point)
+                        checkLayer, j, checkImage, checkPoint)
                 end
             end)
+
+            if useBdr then
+                local bdrPoint = bdrPoints[i]
+                local bdrLayer = bdrLayers[i]
+
+                app.transaction(function()
+                    local j = 0
+                    while j < lenFrames do
+                        j = j + 1
+                        activeSprite:newCel(
+                            bdrLayer, j, bdrImage, bdrPoint)
+                    end
+                end)
+            end
         end
 
         app.activeFrame = firstFrame
