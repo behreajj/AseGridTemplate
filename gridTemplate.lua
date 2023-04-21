@@ -11,14 +11,12 @@ local defaults = {
     -- on scale?
     cols = 5,
     rows = 5,
-    margin = 4,
+    margin = 3,
     padding = 2,
     border = 0,
     cellWidth = 32,
     cellHeight = 32,
     opacity = 255,
-    lockGrid = true,
-    collapseGrid = true,
     wChecker = 16,
     hChecker = 16,
     xChecker = 0,
@@ -28,6 +26,8 @@ local defaults = {
     labelSize = 0,
     frames = 1,
     fps = 12,
+    lockGrid = true,
+    closeGroups = true,
     layerColorBlue01 = 43,
     layerColorBlue02 = 85,
     layerColorBlue03 = 128,
@@ -334,6 +334,9 @@ dlg:button {
         local headerClr = args.headerClr --[[@as Color]]
         local labelClr = args.labelClr --[[@as Color]]
 
+        local editGrid = not defaults.lockGrid
+        local closeGroups = defaults.closeGroups
+
         local layerColorBlue01 = defaults.layerColorBlue01
         local layerColorBlue02 = defaults.layerColorBlue02
         local layerColorBlue03 = defaults.layerColorBlue03
@@ -352,6 +355,7 @@ dlg:button {
         local border2 = border + border
         local colsn1 = cols - 1
         local rowsn1 = rows - 1
+        local flatLen = rows * cols
 
         local useHeader = headVrf > 0
         local useBkg = bkgClr.alpha > 0
@@ -501,10 +505,12 @@ dlg:button {
         local gridGroup = nil
         app.transaction(function()
             gridGroup = activeSprite:newGroup()
-            gridGroup.name = "Grid"
+            gridGroup.name = string.format(
+                "Grid %d x %d",
+                cols, rows)
             gridGroup.stackIndex = 1
-            gridGroup.isCollapsed = true
-            gridGroup.isEditable = false
+            gridGroup.isCollapsed = closeGroups
+            gridGroup.isEditable = editGrid
         end)
 
         local bkgLayer = nil
@@ -516,7 +522,7 @@ dlg:button {
                 bkgLayer.name = "Bkg"
                 bkgLayer.parent = gridGroup
                 bkgLayer.opacity = opacity
-                bkgLayer.isEditable = false
+                bkgLayer.isEditable = editGrid
                 bkgLayer.isContinuous = oneFrame
             end)
         end
@@ -539,7 +545,7 @@ dlg:button {
                 headLayer.name = "Header"
                 headLayer.parent = gridGroup
                 headLayer.opacity = opacity
-                headLayer.isEditable = false
+                headLayer.isEditable = editGrid
                 headLayer.isContinuous = oneFrame
             end)
         end
@@ -564,9 +570,9 @@ dlg:button {
         ---@type Layer[]
         local checkLayers = {}
 
-        local row = -1
-        while row < rowsn1 do
-            row = row + 1
+        local row = rows
+        while row > 0 do
+            row = row - 1
 
             local yOffset = yGridOffset + row * padding
             local y = row * hCellTotal + yOffset
@@ -585,15 +591,15 @@ dlg:button {
                 rowGroup = activeSprite:newGroup()
                 rowGroup.name = rowName
                 rowGroup.parent = gridGroup
-                rowGroup.isCollapsed = true
-                rowGroup.isEditable = false
+                rowGroup.isCollapsed = closeGroups
+                rowGroup.isEditable = editGrid
                 rowGroup.color = rowColor
             end)
 
             transact(function()
-                local col = -1
-                while col < colsn1 do
-                    col = col + 1
+                local col = cols
+                while col > 0 do
+                    col = col - 1
 
                     local xOffset = xGridOffset + col * padding
                     local x = col * wCellTotal + xOffset
@@ -609,87 +615,85 @@ dlg:button {
                     local colGroup = nil
                     colGroup = activeSprite:newGroup()
                     colGroup.name = strfmt(
-                        "Module %02d %02d",
+                        "Column %02d %02d",
                         1 + col, 1 + row)
                     colGroup.parent = rowGroup
-                    colGroup.isCollapsed = true
-                    colGroup.isEditable = false
+                    colGroup.isCollapsed = closeGroups
+                    colGroup.isEditable = editGrid
                     colGroup.color = colColor
 
-                    local flatIdx = col + row * cols
+                    local idxFlat = col + row * cols
+                    local idxReverse = flatLen - idxFlat
 
                     if useLabel then
                         local labelColor = Color {
                             r = red,
                             g = green,
-                            b = layerColorBlue01,
+                            b = layerColorBlue03,
                             a = layerColorAlpha
                         }
 
                         local labelLayer = nil
                         labelLayer = activeSprite:newLayer()
                         labelLayer.name = strfmt(
-                            "Label %04d",
-                            1 + flatIdx)
+                            "Label %04d", 1 + idxFlat)
                         labelLayer.parent = colGroup
                         labelLayer.isContinuous = oneFrame
                         labelLayer.opacity = opacity
-                        labelLayer.isEditable = false
+                        labelLayer.isEditable = editGrid
                         labelLayer.color = labelColor
 
-                        labelPoints[1 + flatIdx] = Point(
+                        labelPoints[idxReverse] = Point(
                             xLabelLoc + x,
                             yLabelLoc + y)
-                        labelLayers[1 + flatIdx] = labelLayer
-                    end
-
-                    if useBdr then
-                        local bdrColor = Color {
-                            r = red,
-                            g = green,
-                            b = layerColorBlue02,
-                            a = layerColorAlpha
-                        }
-
-                        local bdrLayer = nil
-                        bdrLayer = activeSprite:newLayer()
-                        bdrLayer.name = strfmt(
-                            "Border %04d",
-                            1 + flatIdx)
-                        bdrLayer.parent = colGroup
-                        bdrLayer.isContinuous = oneFrame
-                        bdrLayer.opacity = opacity
-                        bdrLayer.isEditable = false
-                        bdrLayer.color = bdrColor
-
-                        bdrPoints[1 + flatIdx] = Point(
-                            xLabelDisplace + x,
-                            yLabelDisplace + y)
-                        bdrLayers[1 + flatIdx] = bdrLayer
+                        labelLayers[idxReverse] = labelLayer
                     end
 
                     local checkColor = Color {
                         r = red,
                         g = green,
-                        b = layerColorBlue03,
+                        b = layerColorBlue02,
                         a = layerColorAlpha
                     }
 
                     local checkLayer = nil
                     checkLayer = activeSprite:newLayer()
                     checkLayer.name = strfmt(
-                        "Checker %04d",
-                        1 + flatIdx)
+                        "Checker %04d", 1 + idxFlat)
                     checkLayer.parent = colGroup
                     checkLayer.isContinuous = oneFrame
-                    checkLayer.isEditable = false
+                    checkLayer.isEditable = editGrid
                     checkLayer.opacity = opacity
                     checkLayer.color = checkColor
 
-                    checkPoints[1 + flatIdx] = Point(
+                    checkPoints[idxReverse] = Point(
                         xLabelDisplace + border + x,
                         yLabelDisplace + border + y)
-                    checkLayers[1 + flatIdx] = checkLayer
+                    checkLayers[idxReverse] = checkLayer
+
+                    if useBdr then
+                        local bdrColor = Color {
+                            r = red,
+                            g = green,
+                            b = layerColorBlue01,
+                            a = layerColorAlpha
+                        }
+
+                        local bdrLayer = nil
+                        bdrLayer = activeSprite:newLayer()
+                        bdrLayer.name = strfmt(
+                            "Border %04d", 1 + idxFlat)
+                        bdrLayer.parent = colGroup
+                        bdrLayer.isContinuous = oneFrame
+                        bdrLayer.opacity = opacity
+                        bdrLayer.isEditable = editGrid
+                        bdrLayer.color = bdrColor
+
+                        bdrPoints[idxReverse] = Point(
+                            xLabelDisplace + x,
+                            yLabelDisplace + y)
+                        bdrLayers[idxReverse] = bdrLayer
+                    end
                 end
             end)
         end
@@ -753,6 +757,18 @@ dlg:button {
                 end)
             end
 
+            local checkPoint = checkPoints[i]
+            local checkLayer = checkLayers[i]
+
+            app.transaction(function()
+                local m = 0
+                while m < lenFrames do
+                    m = m + 1
+                    activeSprite:newCel(
+                        checkLayer, m, checkImage, checkPoint)
+                end
+            end)
+
             if useBdr then
                 local bdrPoint = bdrPoints[i]
                 local bdrLayer = bdrLayers[i]
@@ -766,20 +782,9 @@ dlg:button {
                     end
                 end)
             end
-
-            local checkPoint = checkPoints[i]
-            local checkLayer = checkLayers[i]
-
-            app.transaction(function()
-                local m = 0
-                while m < lenFrames do
-                    m = m + 1
-                    activeSprite:newCel(
-                        checkLayer, m, checkImage, checkPoint)
-                end
-            end)
         end
 
+        activeSprite.filename = "Grid"
         activeSprite.gridBounds = Rectangle(
             xGridOffset, yGridOffset,
             wCellTotal + padding,
