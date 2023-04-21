@@ -1,4 +1,14 @@
+local labelTypes = {
+    "LEFT",
+    "RIGHT",
+    "TOP",
+    "BOTTOM"
+}
+
 local defaults = {
+    -- Should sliders be replaced with number
+    -- inputs to give user greater flexibility
+    -- on scale?
     cols = 5,
     rows = 5,
     margin = 4,
@@ -13,11 +23,15 @@ local defaults = {
     hChecker = 16,
     xChecker = 0,
     yChecker = 0,
-    layerColorBlue01 = 64,
-    layerColorBlue02 = 128,
+    headerHeight = 0,
+    labelType = "BOTTOM",
+    labelSize = 0,
     frames = 1,
     fps = 12,
-    layerColorAlpha = 96
+    layerColorBlue01 = 43,
+    layerColorBlue02 = 85,
+    layerColorBlue03 = 128,
+    layerColorAlpha = 85
 }
 
 local dlg = Dialog { title = "Grid Template" }
@@ -92,7 +106,6 @@ dlg:newrow { always = false }
 
 dlg:color {
     id = "borderClr",
-    -- One less step is 94 for another color.
     color = Color { r = 119, g = 119, b = 119 },
     visible = defaults.border > 0
 }
@@ -111,6 +124,8 @@ dlg:slider {
         local hChecker = args.hChecker --[[@as integer]]
         local validSize = wChecker > 0 and hChecker > 0
         dlg:modify { id = "bChecker", visible = validSize }
+        dlg:modify { id = "xChecker", visible = validSize }
+        dlg:modify { id = "yChecker", visible = validSize }
     end
 }
 
@@ -125,6 +140,8 @@ dlg:slider {
         local hChecker = args.hChecker --[[@as integer]]
         local validSize = wChecker > 0 and hChecker > 0
         dlg:modify { id = "bChecker", visible = validSize }
+        dlg:modify { id = "xChecker", visible = validSize }
+        dlg:modify { id = "yChecker", visible = validSize }
     end
 }
 
@@ -136,6 +153,8 @@ dlg:slider {
     min = -32,
     max = 31,
     value = defaults.xChecker,
+    visible = defaults.wChecker > 0
+        and defaults.hChecker > 0
 }
 
 dlg:slider {
@@ -143,6 +162,8 @@ dlg:slider {
     min = -32,
     max = 31,
     value = defaults.yChecker,
+    visible = defaults.wChecker > 0
+        and defaults.hChecker > 0
 }
 
 dlg:newrow { always = false }
@@ -150,14 +171,69 @@ dlg:newrow { always = false }
 dlg:color {
     id = "aChecker",
     label = "Color:",
-    color = Color { r = 48, g = 48, b = 48 }
+    color = Color { r = 71, g = 71, b = 71 }
 }
 
 dlg:color {
     id = "bChecker",
-    color = Color { r = 71, g = 71, b = 71 },
+    color = Color { r = 96, g = 96, b = 96 },
     visible = defaults.wChecker > 0
         and defaults.hChecker > 0
+}
+
+dlg:newrow { always = false }
+
+dlg:number {
+    id = "headerHeight",
+    label = "Header:",
+    text = string.format("%d", defaults.headerHeight),
+    decimals = 0,
+    visible = false,
+    onchange = function()
+        local args = dlg.data
+        local headerHeight = args.headerHeight --[[@as number]]
+        local isValid = headerHeight > 0
+        dlg:modify { id = "headerClr", visible = isValid }
+    end
+}
+
+dlg:newrow { always = false }
+
+dlg:color {
+    id = "headerClr",
+    color = Color { r = 48, g = 48, b = 48 },
+    visible = defaults.headerHeight > 0
+}
+
+dlg:newrow { always = false }
+
+dlg:combobox {
+    id = "labelType",
+    label = "Label:",
+    option = defaults.labelType,
+    options = labelTypes
+}
+
+dlg:newrow { always = false }
+
+dlg:number {
+    id = "labelSize",
+    text = string.format("%d", defaults.labelSize),
+    decimals = 0,
+    onchange = function()
+        local args = dlg.data
+        local labelSize = args.labelSize --[[@as number]]
+        local isValid = labelSize > 0
+        dlg:modify { id = "labelClr", visible = isValid }
+    end
+}
+
+dlg:newrow { always = false }
+
+dlg:color {
+    id = "labelClr",
+    color = Color { r = 48, g = 48, b = 48 },
+    visible = defaults.labelSize > 0
 }
 
 dlg:newrow { always = false }
@@ -186,7 +262,8 @@ dlg:slider {
     label = "Frames:",
     min = 1,
     max = 96,
-    value = defaults.frames
+    value = defaults.frames,
+    visible = false
 }
 
 dlg:newrow { always = false }
@@ -196,7 +273,8 @@ dlg:slider {
     label = "FPS:",
     min = 1,
     max = 50,
-    value = defaults.fps
+    value = defaults.fps,
+    visible = false
 }
 
 dlg:newrow { always = false }
@@ -233,6 +311,14 @@ dlg:button {
         local yCheck = args.yChecker
             or defaults.yChecker --[[@as integer]]
 
+        local headerHeight = args.headerHeight
+            or defaults.headerHeight --[[@as number]]
+
+        local labelType = args.labelType
+            or defaults.labelType --[[@as string]]
+        local labelSize = args.labelSize
+            or defaults.labelSize --[[@as number]]
+
         local opacity = args.opacity
             or defaults.opacity --[[@as integer]]
 
@@ -241,42 +327,67 @@ dlg:button {
         local fps = args.fps
             or defaults.fps --[[@as integer]]
 
-        local layerColorBlue01 = defaults.layerColorBlue01
-        local layerColorBlue02 = defaults.layerColorBlue02
-        local layerColorAlpha = defaults.layerColorAlpha
-
         local aChecker = args.aChecker --[[@as Color]]
         local bChecker = args.bChecker --[[@as Color]]
         local bkgClr = args.bkgClr --[[@as Color]]
         local borderClr = args.borderClr --[[@as Color]]
+        local headerClr = args.headerClr --[[@as Color]]
+        local labelClr = args.labelClr --[[@as Color]]
+
+        local layerColorBlue01 = defaults.layerColorBlue01
+        local layerColorBlue02 = defaults.layerColorBlue02
+        local layerColorBlue03 = defaults.layerColorBlue03
+        local layerColorAlpha = defaults.layerColorAlpha
 
         local cwVrf = math.max(2,
             math.floor(0.5 + math.abs(cellWidth)))
         local chVrf = math.max(2,
             math.floor(0.5 + math.abs(cellHeight)))
+        local headVrf = math.max(0,
+            math.floor(0.5 + math.abs(headerHeight)))
+        local labelVrf = math.max(0,
+            math.floor(0.5 + math.abs(labelSize)))
 
         local margin2 = margin + margin
         local border2 = border + border
         local colsn1 = cols - 1
         local rowsn1 = rows - 1
 
+        local useHeader = headVrf > 0
+        local useBkg = bkgClr.alpha > 0
+        local useBdr = borderClr.alpha > 0 and border > 0
+        local useLabel = labelVrf > 0
+        local oneFrame = frameReqs <= 1
+        if not useBdr then border = 0 end
+
+        local xGridOffset = margin
+        local yGridOffset = margin
+        if useHeader then
+            yGridOffset = margin
+                + padding + headVrf
+        end
+
         local rowToGreen = 0.0
         local colToRed = 0.0
         if rowsn1 ~= 0 then rowToGreen = 255.0 / rowsn1 end
         if colsn1 ~= 0 then colToRed = 255.0 / colsn1 end
 
-        local useBkg = bkgClr.alpha > 0
-        local useBdr = borderClr.alpha > 0 and border > 0
-        local oneFrame = frameReqs <= 1
-        if not useBdr then border = 0 end
-
         local aHex = aChecker.rgbaPixel | 0xff000000
         local bHex = bChecker.rgbaPixel | 0xff000000
         local bkgHex = bkgClr.rgbaPixel | 0xff000000
 
-        -- TODO: Change as new elements are added to each cell.
+        -- Update whenever new elements are added to a cell.
         local wCellTotal = cwVrf + border2
         local hCellTotal = chVrf + border2
+        if useLabel then
+            if labelType == "LEFT"
+                or labelType == "RIGHT" then
+                wCellTotal = wCellTotal + labelVrf
+            elseif labelType == "TOP"
+                or labelType == "BOTTOM" then
+                hCellTotal = hCellTotal + labelVrf
+            end
+        end
 
         local spriteWidth = margin2
             + wCellTotal * cols
@@ -284,6 +395,11 @@ dlg:button {
         local spriteHeight = margin2
             + hCellTotal * rows
             + padding * rowsn1
+        if useHeader then
+            spriteHeight = spriteHeight
+                + headVrf
+                + padding
+        end
         local activeSprite = Sprite(spriteWidth, spriteHeight)
         local activeLayer = activeSprite.layers[1]
         app.command.LoadPalette { preset = "default" }
@@ -307,6 +423,43 @@ dlg:button {
             end
         else
             checkImage:clear(aHex)
+        end
+
+        local labelImage = nil
+        local xLabelDisplace = 0
+        local yLabelDisplace = 0
+        local xLabelLoc = 0
+        local yLabelLoc = 0
+        if useLabel then
+            local wLabel = 0
+            local hLabel = 0
+            if labelType == "LEFT" then
+                xLabelDisplace = labelVrf
+                wLabel = labelVrf
+                hLabel = hCellTotal
+            elseif labelType == "RIGHT" then
+                xLabelLoc = cwVrf + border2
+                wLabel = labelVrf
+                hLabel = hCellTotal
+            elseif labelType == "TOP" then
+                yLabelDisplace = labelVrf
+                wLabel = wCellTotal
+                hLabel = labelVrf
+            elseif labelType == "BOTTOM" then
+                yLabelLoc = chVrf + border2
+                wLabel = wCellTotal
+                hLabel = labelVrf
+            end
+
+            local labelSpec = ImageSpec(spriteSpec)
+            labelSpec.width = wLabel
+            labelSpec.height = hLabel
+            labelImage = Image(labelSpec)
+
+            if labelClr.alpha > 0 then
+                local labelHex = labelClr.rgbaPixel | 0xff000000
+                labelImage:clear(labelHex)
+            end
         end
 
         local bdrImage = nil
@@ -355,8 +508,8 @@ dlg:button {
         end)
 
         local bkgLayer = nil
-        local bkgImg = Image(spriteSpec)
-        bkgImg:clear(bkgHex)
+        local bkgImage = Image(spriteSpec)
+        bkgImage:clear(bkgHex)
         if useBkg then
             app.transaction(function()
                 bkgLayer = activeSprite:newLayer()
@@ -368,10 +521,38 @@ dlg:button {
             end)
         end
 
+        local headLayer = nil
+        local headImage = nil
+        if useHeader then
+            local headSpec = ImageSpec(spriteSpec)
+            headSpec.width = wCellTotal * cols
+                + padding * colsn1
+            headSpec.height = headVrf
+            headImage = Image(headSpec)
+            if headerClr.alpha > 0 then
+                local headHex = headerClr.rgbaPixel | 0xff000000
+                headImage:clear(headHex)
+            end
+
+            app.transaction(function()
+                headLayer = activeSprite:newLayer()
+                headLayer.name = "Header"
+                headLayer.parent = gridGroup
+                headLayer.opacity = opacity
+                headLayer.isEditable = false
+                headLayer.isContinuous = oneFrame
+            end)
+        end
+
         -- Cache methods used in loops.
         local floor = math.floor
         local strfmt = string.format
         local transact = app.transaction
+
+        ---@type Point[]
+        local labelPoints = {}
+        ---@type Layer[]
+        local labelLayers = {}
 
         ---@type Point[]
         local bdrPoints = {}
@@ -387,7 +568,7 @@ dlg:button {
         while row < rowsn1 do
             row = row + 1
 
-            local yOffset = margin + row * padding
+            local yOffset = yGridOffset + row * padding
             local y = row * hCellTotal + yOffset
             local green = floor(row * rowToGreen + 0.5)
 
@@ -414,7 +595,7 @@ dlg:button {
                 while col < colsn1 do
                     col = col + 1
 
-                    local xOffset = margin + col * padding
+                    local xOffset = xGridOffset + col * padding
                     local x = col * wCellTotal + xOffset
                     local red = floor(col * colToRed + 0.5)
 
@@ -428,7 +609,7 @@ dlg:button {
                     local colGroup = nil
                     colGroup = activeSprite:newGroup()
                     colGroup.name = strfmt(
-                        "Cell %02d %02d",
+                        "Module %02d %02d",
                         1 + col, 1 + row)
                     colGroup.parent = rowGroup
                     colGroup.isCollapsed = true
@@ -437,11 +618,36 @@ dlg:button {
 
                     local flatIdx = col + row * cols
 
+                    if useLabel then
+                        local labelColor = Color {
+                            r = red,
+                            g = green,
+                            b = layerColorBlue01,
+                            a = layerColorAlpha
+                        }
+
+                        local labelLayer = nil
+                        labelLayer = activeSprite:newLayer()
+                        labelLayer.name = strfmt(
+                            "Label %04d",
+                            1 + flatIdx)
+                        labelLayer.parent = colGroup
+                        labelLayer.isContinuous = oneFrame
+                        labelLayer.opacity = opacity
+                        labelLayer.isEditable = false
+                        labelLayer.color = labelColor
+
+                        labelPoints[1 + flatIdx] = Point(
+                            xLabelLoc + x,
+                            yLabelLoc + y)
+                        labelLayers[1 + flatIdx] = labelLayer
+                    end
+
                     if useBdr then
                         local bdrColor = Color {
                             r = red,
                             g = green,
-                            b = layerColorBlue01,
+                            b = layerColorBlue02,
                             a = layerColorAlpha
                         }
 
@@ -453,16 +659,19 @@ dlg:button {
                         bdrLayer.parent = colGroup
                         bdrLayer.isContinuous = oneFrame
                         bdrLayer.opacity = opacity
+                        bdrLayer.isEditable = false
                         bdrLayer.color = bdrColor
 
-                        bdrPoints[1 + flatIdx] = Point(x, y)
+                        bdrPoints[1 + flatIdx] = Point(
+                            xLabelDisplace + x,
+                            yLabelDisplace + y)
                         bdrLayers[1 + flatIdx] = bdrLayer
                     end
 
                     local checkColor = Color {
                         r = red,
                         g = green,
-                        b = layerColorBlue02,
+                        b = layerColorBlue03,
                         a = layerColorAlpha
                     }
 
@@ -473,10 +682,13 @@ dlg:button {
                         1 + flatIdx)
                     checkLayer.parent = colGroup
                     checkLayer.isContinuous = oneFrame
+                    checkLayer.isEditable = false
                     checkLayer.opacity = opacity
                     checkLayer.color = checkColor
 
-                    checkPoints[1 + flatIdx] = Point(x + border, y + border)
+                    checkPoints[1 + flatIdx] = Point(
+                        xLabelDisplace + border + x,
+                        yLabelDisplace + border + y)
                     checkLayers[1 + flatIdx] = checkLayer
                 end
             end)
@@ -507,7 +719,18 @@ dlg:button {
                 local h = 0
                 while h < lenFrames do
                     h = h + 1
-                    activeSprite:newCel(bkgLayer, h, bkgImg)
+                    activeSprite:newCel(bkgLayer, h, bkgImage)
+                end
+            end)
+        end
+
+        if useHeader then
+            local headLoc = Point(margin, margin)
+            app.transaction(function()
+                local h = 0
+                while h < lenFrames do
+                    h = h + 1
+                    activeSprite:newCel(headLayer, h, headImage, headLoc)
                 end
             end)
         end
@@ -515,32 +738,52 @@ dlg:button {
         local i = 0
         while i < gridFlat do
             i = i + 1
-            local checkPoint = checkPoints[i]
-            local checkLayer = checkLayers[i]
 
-            app.transaction(function()
-                local j = 0
-                while j < lenFrames do
-                    j = j + 1
-                    activeSprite:newCel(
-                        checkLayer, j, checkImage, checkPoint)
-                end
-            end)
-
-            if useBdr then
-                local bdrPoint = bdrPoints[i]
-                local bdrLayer = bdrLayers[i]
+            if useLabel then
+                local labelPoint = labelPoints[i]
+                local labelLayer = labelLayers[i]
 
                 app.transaction(function()
                     local j = 0
                     while j < lenFrames do
                         j = j + 1
                         activeSprite:newCel(
-                            bdrLayer, j, bdrImage, bdrPoint)
+                            labelLayer, j, labelImage, labelPoint)
                     end
                 end)
             end
+
+            if useBdr then
+                local bdrPoint = bdrPoints[i]
+                local bdrLayer = bdrLayers[i]
+
+                app.transaction(function()
+                    local k = 0
+                    while k < lenFrames do
+                        k = k + 1
+                        activeSprite:newCel(
+                            bdrLayer, k, bdrImage, bdrPoint)
+                    end
+                end)
+            end
+
+            local checkPoint = checkPoints[i]
+            local checkLayer = checkLayers[i]
+
+            app.transaction(function()
+                local m = 0
+                while m < lenFrames do
+                    m = m + 1
+                    activeSprite:newCel(
+                        checkLayer, m, checkImage, checkPoint)
+                end
+            end)
         end
+
+        activeSprite.gridBounds = Rectangle(
+            xGridOffset, yGridOffset,
+            wCellTotal + padding,
+            hCellTotal + padding)
 
         app.activeFrame = firstFrame
         app.activeLayer = activeLayer
