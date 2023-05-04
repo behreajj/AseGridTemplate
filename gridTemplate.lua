@@ -5,6 +5,11 @@ local labelTypes = {
     "BOTTOM"
 }
 
+local patternTypes = {
+    "DIAMOND",
+    "RECTANGLE"
+}
+
 local defaults = {
     -- Should sliders be replaced with number
     -- inputs to give user greater flexibility
@@ -17,8 +22,10 @@ local defaults = {
     cellWidth = 32,
     cellHeight = 32,
     opacity = 255,
+    patternType = "RECTANGLE",
     wChecker = 16,
     hChecker = 16,
+    szDiam = 16,
     xChecker = 0,
     yChecker = 0,
     headerHeight = 0,
@@ -112,12 +119,61 @@ dlg:color {
 
 dlg:newrow { always = false }
 
+dlg:combobox {
+    id = "patternType",
+    label = "Pattern",
+    option = defaults.patternType,
+    options = patternTypes,
+    onchange = function()
+        local args = dlg.data
+        local patternType = args.patternType --[[@as string]]
+        local isDiam = patternType == "DIAMOND"
+        local isRect = patternType == "RECTANGLE"
+        dlg:modify { id = "szDiam", visible = isDiam }
+        dlg:modify { id = "wChecker", visible = isRect }
+        dlg:modify { id = "hChecker", visible = isRect }
+
+        local validSize = false
+        if isDiam then
+            local szDiam = args.szDiam --[[@as integer]]
+            validSize = szDiam > 1
+        else
+            local wChecker = args.wChecker --[[@as integer]]
+            local hChecker = args.hChecker --[[@as integer]]
+            validSize = wChecker > 0 and hChecker > 0
+        end
+        dlg:modify { id = "bChecker", visible = validSize }
+        dlg:modify { id = "xChecker", visible = validSize }
+        dlg:modify { id = "yChecker", visible = validSize }
+    end
+}
+
+dlg:newrow { always = false }
+
+dlg:slider {
+    id = "szDiam",
+    label = "Diamond:",
+    min = 4,
+    max = 64,
+    value = defaults.szDiam,
+    visible = defaults.patternType == "DIAMOND",
+    onchange = function()
+        local args = dlg.data
+        local szDiam = args.szDiam --[[@as integer]]
+        local validSize = szDiam > 1
+        dlg:modify { id = "bChecker", visible = validSize }
+        dlg:modify { id = "xChecker", visible = validSize }
+        dlg:modify { id = "yChecker", visible = validSize }
+    end
+}
+
 dlg:slider {
     id = "wChecker",
     label = "Checker:",
     min = 0,
     max = 64,
     value = defaults.wChecker,
+    visible = defaults.patternType == "RECTANGLE",
     onchange = function()
         local args = dlg.data
         local wChecker = args.wChecker --[[@as integer]]
@@ -134,6 +190,7 @@ dlg:slider {
     min = 0,
     max = 64,
     value = defaults.hChecker,
+    visible = defaults.patternType == "RECTANGLE",
     onchange = function()
         local args = dlg.data
         local wChecker = args.wChecker --[[@as integer]]
@@ -302,10 +359,14 @@ dlg:button {
         local border = args.border
             or defaults.border --[[@as integer]]
 
+        local patternType = args.patternType
+            or defaults.patternType --[[@as string]]
         local wCheck = args.wChecker
             or defaults.wChecker --[[@as integer]]
         local hCheck = args.hChecker
             or defaults.hChecker --[[@as integer]]
+        local szDiam = args.szDiam
+            or defaults.szDiam --[[@as integer]]
         local xCheck = args.xChecker
             or defaults.xChecker --[[@as integer]]
         local yCheck = args.yChecker
@@ -414,8 +475,33 @@ dlg:button {
         checkSpec.height = chVrf
         local checkImage = Image(checkSpec)
 
-        if wCheck > 0 and hCheck > 0 and aHex ~= bHex then
-            local pxItr = checkImage:pixels()
+        local validColorDiff = aHex ~= bHex
+        local validChecker = validColorDiff
+            and patternType == "RECTANGLE"
+            and wCheck > 0
+            and hCheck > 0
+        local validDiamond = validColorDiff
+            and patternType == "DIAMOND"
+            and szDiam > 1
+
+        local pxItr = checkImage:pixels()
+        if validDiamond then
+            local halfSize = szDiam * 0.5
+            local abs = math.abs
+            for pixel in pxItr do
+                local xPx = pixel.x - xCheck
+                local yPx = pixel.y - yCheck
+                local xLocal = xPx % szDiam
+                local yLocal = yPx % szDiam
+                local manhDist = abs(xLocal - halfSize)
+                    + abs(yLocal - halfSize)
+                local hex = bHex
+                if manhDist <= halfSize then
+                    hex = aHex
+                end
+                pixel(hex)
+            end
+        elseif validChecker then
             for pixel in pxItr do
                 local xPx = pixel.x - xCheck
                 local yPx = pixel.y - yCheck
