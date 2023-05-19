@@ -103,7 +103,7 @@ dlg:slider {
     value = defaults.border,
     onchange = function()
         local args = dlg.data
-        local sizeBorder = args.border
+        local sizeBorder = args.border --[[@as integer]]
         local validSize = sizeBorder > 0
         dlg:modify { id = "borderClr", visible = validSize }
     end
@@ -876,8 +876,13 @@ dlg:button {
             wCellTotal + padding,
             hCellTotal + padding)
 
-        app.activeFrame = firstFrame
-        app.activeLayer = activeLayer
+        if app.apiVersion >= 23 then
+            app.frame = firstFrame
+            app.layer = activeLayer
+        else
+            app.activeFrame = firstFrame
+            app.activeLayer = activeLayer
+        end
         app.command.FitScreen()
         app.refresh()
         dlg:close()
