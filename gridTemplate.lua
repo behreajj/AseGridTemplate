@@ -7,7 +7,8 @@ local labelTypes = {
 
 local patternTypes = {
     "DIAMOND",
-    "RECTANGLE"
+    "RECTANGLE",
+    "RHOMBUS"
 }
 
 local defaults = {
@@ -31,6 +32,7 @@ local defaults = {
     headerHeight = 0,
     labelType = "BOTTOM",
     labelSize = 0,
+    genSlices = false,
     frames = 1,
     fps = 12,
     lockGrid = true,
@@ -128,6 +130,7 @@ dlg:combobox {
         local args = dlg.data
         local patternType = args.patternType --[[@as string]]
         local isDiam = patternType == "DIAMOND"
+            or patternType == "RHOMBUS"
         local isRect = patternType == "RECTANGLE"
         dlg:modify { id = "szDiam", visible = isDiam }
         dlg:modify { id = "wChecker", visible = isRect }
@@ -156,7 +159,8 @@ dlg:slider {
     min = 4,
     max = 64,
     value = defaults.szDiam,
-    visible = defaults.patternType == "DIAMOND",
+    visible = defaults.patternType == "DIAMOND"
+        or defaults.patternType == "RHOMBUS",
     onchange = function()
         local args = dlg.data
         local szDiam = args.szDiam --[[@as integer]]
@@ -336,6 +340,15 @@ dlg:slider {
 
 dlg:newrow { always = false }
 
+dlg:check {
+    id = "genSlices",
+    label = "Slices:",
+    selected = defaults.genSlices,
+    visible = true
+}
+
+dlg:newrow { always = false }
+
 dlg:button {
     id = "confirm",
     text = "&OK",
@@ -387,6 +400,8 @@ dlg:button {
             or defaults.frames --[[@as integer]]
         local fps = args.fps
             or defaults.fps --[[@as integer]]
+
+        local genSlices = args.genSlices --[[@as boolean]]
 
         local aChecker = args.aChecker --[[@as Color]]
         local bChecker = args.bChecker --[[@as Color]]
@@ -478,19 +493,22 @@ dlg:button {
         local validColorDiff = aHex ~= bHex
         local validChecker = validColorDiff
             and patternType == "RECTANGLE"
-            and wCheck > 0
-            and hCheck > 0
+            and wCheck >= 1
+            and hCheck >= 1
         local validDiamond = validColorDiff
-            and patternType == "DIAMOND"
-            and szDiam > 1
+            and (patternType == "DIAMOND"
+                or patternType == "RHOMBUS")
+            and szDiam >= 4
 
         local pxItr = checkImage:pixels()
         if validDiamond then
+            local yScale = 1
+            if patternType == "RHOMBUS" then yScale = 2 end
             local halfSize = szDiam * 0.5
             local abs = math.abs
             for pixel in pxItr do
                 local xPx = pixel.x - xCheck
-                local yPx = pixel.y - yCheck
+                local yPx = yScale * (pixel.y - yCheck)
                 local xLocal = xPx % szDiam
                 local yLocal = yPx % szDiam
                 local manhDist = abs(xLocal - halfSize)
@@ -691,6 +709,9 @@ dlg:button {
                     local x = col * wCellTotal + xOffset
                     local red = floor(col * colToRed + 0.5)
 
+                    local idxFlat = col + row * cols
+                    local idxReverse = flatLen - idxFlat
+
                     local colColor = Color {
                         r = red,
                         g = green,
@@ -707,9 +728,6 @@ dlg:button {
                     colGroup.isCollapsed = closeGroups
                     colGroup.isEditable = editGrid
                     colGroup.color = colColor
-
-                    local idxFlat = col + row * cols
-                    local idxReverse = flatLen - idxFlat
 
                     if useLabel then
                         local labelColor = Color {
@@ -868,6 +886,23 @@ dlg:button {
                     end
                 end)
             end
+        end
+
+        if genSlices then
+            app.transaction(function()
+                -- Trying to set center, pivot or color crashes Aseprite.
+                local j = 0
+                while j < gridFlat do
+                    local sliceName = string.format("Slice %04d", j)
+                    j = j + 1
+                    local checkPoint = checkPoints[j]
+                    local slice = activeSprite:newSlice(
+                        Rectangle(
+                            checkPoint.x, checkPoint.y,
+                            cwVrf, chVrf))
+                    slice.name = sliceName
+                end
+            end)
         end
 
         activeSprite.filename = "Grid"
