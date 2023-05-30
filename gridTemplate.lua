@@ -893,7 +893,7 @@ dlg:button {
                 -- Trying to set center, pivot or color crashes Aseprite.
                 local j = 0
                 while j < gridFlat do
-                    local sliceName = string.format("Slice %04d", j)
+                    local sliceName = string.format("Slice %04d", 1 + j)
                     j = j + 1
                     local checkPoint = checkPoints[j]
                     local slice = activeSprite:newSlice(
