@@ -43,6 +43,15 @@ local defaults = {
     layerColorAlpha = 85
 }
 
+-- local oldSprite = app.activeSprite
+-- if oldSprite then
+--     local bgSize = app.preferences.document(oldSprite).bg.size
+--     defaults.wChecker = math.max(1, math.abs(bgSize.width))
+--     defaults.hChecker = math.max(1, math.abs(bgSize.height))
+--     defaults.cellWidth = defaults.wChecker * 2
+--     defaults.cellHeight = defaults.hChecker * 2
+-- end
+
 local dlg = Dialog { title = "Grid Template" }
 
 dlg:slider {
@@ -890,7 +899,8 @@ dlg:button {
 
         if genSlices then
             app.transaction(function()
-                -- Trying to set center, pivot or color crashes Aseprite.
+                -- Trying to set center, pivot or color crashes Aseprite...
+                -- though this could be due to sprite properties being open?
                 local j = 0
                 while j < gridFlat do
                     j = j + 1
@@ -918,6 +928,17 @@ dlg:button {
             app.activeFrame = firstFrame
             app.activeLayer = activeLayer
         end
+
+        -- Onion skin defaults need to be adjusted to work well with grid.
+        -- Position 1 is In front of sprite.
+        -- Type 1 is Red/Blue Tint.
+        local docPrefs <const> = app.preferences.document(activeSprite)
+        local onionSkinPrefs <const> = docPrefs.onionskin
+        onionSkinPrefs.loop_tag = false
+        onionSkinPrefs.current_layer = true
+        onionSkinPrefs.position = 1
+        onionSkinPrefs.type = 1
+
         app.command.FitScreen()
         app.refresh()
         dlg:close()
