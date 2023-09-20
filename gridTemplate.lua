@@ -12,9 +12,8 @@ local patternTypes = {
 }
 
 local defaults = {
-    -- Should sliders be replaced with number
-    -- inputs to give user greater flexibility
-    -- on scale?
+    -- Should sliders be replaced with number inputs to give user greater
+    -- flexibility on scale?
     cols = 5,
     rows = 5,
     margin = 3,
@@ -32,7 +31,6 @@ local defaults = {
     headerHeight = 0,
     labelType = "BOTTOM",
     labelSize = 0,
-    genSlices = false,
     frames = 1,
     fps = 12,
     lockGrid = true,
@@ -349,15 +347,6 @@ dlg:slider {
 
 dlg:newrow { always = false }
 
-dlg:check {
-    id = "genSlices",
-    label = "Slices:",
-    selected = defaults.genSlices,
-    visible = false
-}
-
-dlg:newrow { always = false }
-
 dlg:button {
     id = "confirm",
     text = "&OK",
@@ -409,8 +398,6 @@ dlg:button {
             or defaults.frames --[[@as integer]]
         local fps = args.fps
             or defaults.fps --[[@as integer]]
-
-        local genSlices = args.genSlices --[[@as boolean]]
 
         local aChecker = args.aChecker --[[@as Color]]
         local bChecker = args.bChecker --[[@as Color]]
@@ -895,24 +882,6 @@ dlg:button {
                     end
                 end)
             end
-        end
-
-        if genSlices then
-            app.transaction(function()
-                -- Trying to set center, pivot or color crashes Aseprite...
-                -- though this could be due to sprite properties being open?
-                local j = 0
-                while j < gridFlat do
-                    j = j + 1
-                    local sliceName = string.format("Slice %04d", j)
-                    local checkPoint = checkPoints[j]
-                    local slice = activeSprite:newSlice(
-                        Rectangle(
-                            checkPoint.x, checkPoint.y,
-                            cwVrf, chVrf))
-                    slice.name = sliceName
-                end
-            end)
         end
 
         activeSprite.filename = "Grid"
