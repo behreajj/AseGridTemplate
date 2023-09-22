@@ -901,8 +901,8 @@ dlg:button {
         -- Onion skin defaults need to be adjusted to work well with grid.
         -- Position 1 is In front of sprite.
         -- Type 1 is Red/Blue Tint.
-        local docPrefs <const> = app.preferences.document(activeSprite)
-        local onionSkinPrefs <const> = docPrefs.onionskin
+        local docPrefs = app.preferences.document(activeSprite)
+        local onionSkinPrefs = docPrefs.onionskin
         onionSkinPrefs.loop_tag = false
         onionSkinPrefs.current_layer = true
         onionSkinPrefs.position = 1
