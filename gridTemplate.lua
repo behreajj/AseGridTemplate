@@ -1,17 +1,17 @@
-local labelTypes = {
+local labelTypes <const> = {
     "LEFT",
     "RIGHT",
     "TOP",
     "BOTTOM"
 }
 
-local patternTypes = {
+local patternTypes <const> = {
     "DIAMOND",
     "RECTANGLE",
     "RHOMBUS"
 }
 
-local defaults = {
+local defaults <const> = {
     -- Should sliders be replaced with number inputs to give user greater
     -- flexibility on scale?
     cols = 5,
@@ -41,16 +41,7 @@ local defaults = {
     layerColorAlpha = 85
 }
 
--- local oldSprite = app.activeSprite
--- if oldSprite then
---     local bgSize = app.preferences.document(oldSprite).bg.size
---     defaults.wChecker = math.max(1, math.abs(bgSize.width))
---     defaults.hChecker = math.max(1, math.abs(bgSize.height))
---     defaults.cellWidth = defaults.wChecker * 2
---     defaults.cellHeight = defaults.hChecker * 2
--- end
-
-local dlg = Dialog { title = "Grid Template" }
+local dlg <const> = Dialog { title = "Grid Template" }
 
 dlg:slider {
     id = "cols",
@@ -111,9 +102,9 @@ dlg:slider {
     max = 32,
     value = defaults.border,
     onchange = function()
-        local args = dlg.data
-        local sizeBorder = args.border --[[@as integer]]
-        local validSize = sizeBorder > 0
+        local args <const> = dlg.data
+        local sizeBorder <const> = args.border --[[@as integer]]
+        local validSize <const> = sizeBorder > 0
         dlg:modify { id = "borderClr", visible = validSize }
     end
 }
@@ -130,26 +121,26 @@ dlg:newrow { always = false }
 
 dlg:combobox {
     id = "patternType",
-    label = "Pattern",
+    label = "Pattern:",
     option = defaults.patternType,
     options = patternTypes,
     onchange = function()
-        local args = dlg.data
-        local patternType = args.patternType --[[@as string]]
-        local isDiam = patternType == "DIAMOND"
+        local args <const> = dlg.data
+        local patternType <const> = args.patternType --[[@as string]]
+        local isDiam <const> = patternType == "DIAMOND"
             or patternType == "RHOMBUS"
-        local isRect = patternType == "RECTANGLE"
+        local isRect <const> = patternType == "RECTANGLE"
         dlg:modify { id = "szDiam", visible = isDiam }
         dlg:modify { id = "wChecker", visible = isRect }
         dlg:modify { id = "hChecker", visible = isRect }
 
         local validSize = false
         if isDiam then
-            local szDiam = args.szDiam --[[@as integer]]
+            local szDiam <const> = args.szDiam --[[@as integer]]
             validSize = szDiam > 1
         else
-            local wChecker = args.wChecker --[[@as integer]]
-            local hChecker = args.hChecker --[[@as integer]]
+            local wChecker <const> = args.wChecker --[[@as integer]]
+            local hChecker <const> = args.hChecker --[[@as integer]]
             validSize = wChecker > 0 and hChecker > 0
         end
         dlg:modify { id = "bChecker", visible = validSize }
@@ -169,9 +160,9 @@ dlg:slider {
     visible = defaults.patternType == "DIAMOND"
         or defaults.patternType == "RHOMBUS",
     onchange = function()
-        local args = dlg.data
-        local szDiam = args.szDiam --[[@as integer]]
-        local validSize = szDiam > 1
+        local args <const> = dlg.data
+        local szDiam <const> = args.szDiam --[[@as integer]]
+        local validSize <const> = szDiam > 1
         dlg:modify { id = "bChecker", visible = validSize }
         dlg:modify { id = "xChecker", visible = validSize }
         dlg:modify { id = "yChecker", visible = validSize }
@@ -186,10 +177,10 @@ dlg:slider {
     value = defaults.wChecker,
     visible = defaults.patternType == "RECTANGLE",
     onchange = function()
-        local args = dlg.data
-        local wChecker = args.wChecker --[[@as integer]]
-        local hChecker = args.hChecker --[[@as integer]]
-        local validSize = wChecker > 0 and hChecker > 0
+        local args <const> = dlg.data
+        local wChecker <const> = args.wChecker --[[@as integer]]
+        local hChecker <const> = args.hChecker --[[@as integer]]
+        local validSize <const> = wChecker > 0 and hChecker > 0
         dlg:modify { id = "bChecker", visible = validSize }
         dlg:modify { id = "xChecker", visible = validSize }
         dlg:modify { id = "yChecker", visible = validSize }
@@ -203,10 +194,10 @@ dlg:slider {
     value = defaults.hChecker,
     visible = defaults.patternType == "RECTANGLE",
     onchange = function()
-        local args = dlg.data
-        local wChecker = args.wChecker --[[@as integer]]
-        local hChecker = args.hChecker --[[@as integer]]
-        local validSize = wChecker > 0 and hChecker > 0
+        local args <const> = dlg.data
+        local wChecker <const> = args.wChecker --[[@as integer]]
+        local hChecker <const> = args.hChecker --[[@as integer]]
+        local validSize <const> = wChecker > 0 and hChecker > 0
         dlg:modify { id = "bChecker", visible = validSize }
         dlg:modify { id = "xChecker", visible = validSize }
         dlg:modify { id = "yChecker", visible = validSize }
@@ -256,11 +247,10 @@ dlg:number {
     label = "Header:",
     text = string.format("%d", defaults.headerHeight),
     decimals = 0,
-    visible = false,
     onchange = function()
-        local args = dlg.data
-        local headerHeight = args.headerHeight --[[@as number]]
-        local isValid = headerHeight > 0
+        local args <const> = dlg.data
+        local headerHeight <const> = args.headerHeight --[[@as number]]
+        local isValid <const> = headerHeight > 0
         dlg:modify { id = "headerClr", visible = isValid }
     end
 }
@@ -289,9 +279,9 @@ dlg:number {
     text = string.format("%d", defaults.labelSize),
     decimals = 0,
     onchange = function()
-        local args = dlg.data
-        local labelSize = args.labelSize --[[@as number]]
-        local isValid = labelSize > 0
+        local args <const> = dlg.data
+        local labelSize <const> = args.labelSize --[[@as number]]
+        local isValid <const> = labelSize > 0
         dlg:modify { id = "labelClr", visible = isValid }
     end
 }
@@ -352,91 +342,91 @@ dlg:button {
     text = "&OK",
     focus = true,
     onclick = function()
-        local args = dlg.data
+        local args <const> = dlg.data
 
-        local cellWidth = args.cellWidth
+        local cellWidth <const> = args.cellWidth
             or defaults.cellWidth --[[@as number]]
-        local cellHeight = args.cellHeight
+        local cellHeight <const> = args.cellHeight
             or defaults.cellHeight --[[@as number]]
-        local cols = args.cols
+        local cols <const> = args.cols
             or defaults.cols --[[@as integer]]
-        local rows = args.rows
+        local rows <const> = args.rows
             or defaults.rows --[[@as integer]]
 
-        local margin = args.margin
+        local margin <const> = args.margin
             or defaults.margin --[[@as integer]]
-        local padding = args.padding
+        local padding <const> = args.padding
             or defaults.padding --[[@as integer]]
         local border = args.border
             or defaults.border --[[@as integer]]
 
-        local patternType = args.patternType
+        local patternType <const> = args.patternType
             or defaults.patternType --[[@as string]]
-        local wCheck = args.wChecker
+        local wCheck <const> = args.wChecker
             or defaults.wChecker --[[@as integer]]
-        local hCheck = args.hChecker
+        local hCheck <const> = args.hChecker
             or defaults.hChecker --[[@as integer]]
-        local szDiam = args.szDiam
+        local szDiam <const> = args.szDiam
             or defaults.szDiam --[[@as integer]]
-        local xCheck = args.xChecker
+        local xCheck <const> = args.xChecker
             or defaults.xChecker --[[@as integer]]
-        local yCheck = args.yChecker
+        local yCheck <const> = args.yChecker
             or defaults.yChecker --[[@as integer]]
 
-        local headerHeight = args.headerHeight
+        local headerHeight <const> = args.headerHeight
             or defaults.headerHeight --[[@as number]]
 
-        local labelType = args.labelType
+        local labelType <const> = args.labelType
             or defaults.labelType --[[@as string]]
-        local labelSize = args.labelSize
+        local labelSize <const> = args.labelSize
             or defaults.labelSize --[[@as number]]
 
-        local opacity = args.opacity
+        local opacity <const> = args.opacity
             or defaults.opacity --[[@as integer]]
 
-        local frameReqs = args.frames
+        local frameReqs <const> = args.frames
             or defaults.frames --[[@as integer]]
-        local fps = args.fps
+        local fps <const> = args.fps
             or defaults.fps --[[@as integer]]
 
-        local aChecker = args.aChecker --[[@as Color]]
-        local bChecker = args.bChecker --[[@as Color]]
-        local bkgClr = args.bkgClr --[[@as Color]]
-        local borderClr = args.borderClr --[[@as Color]]
-        local headerClr = args.headerClr --[[@as Color]]
-        local labelClr = args.labelClr --[[@as Color]]
+        local aChecker <const> = args.aChecker --[[@as Color]]
+        local bChecker <const> = args.bChecker --[[@as Color]]
+        local bkgClr <const> = args.bkgClr --[[@as Color]]
+        local borderClr <const> = args.borderClr --[[@as Color]]
+        local headerClr <const> = args.headerClr --[[@as Color]]
+        local labelClr <const> = args.labelClr --[[@as Color]]
 
-        local editGrid = not defaults.lockGrid
-        local closeGroups = defaults.closeGroups
+        local editGrid <const> = not defaults.lockGrid
+        local closeGroups <const> = defaults.closeGroups
 
-        local layerColorBlue01 = defaults.layerColorBlue01
-        local layerColorBlue02 = defaults.layerColorBlue02
-        local layerColorBlue03 = defaults.layerColorBlue03
-        local layerColorAlpha = defaults.layerColorAlpha
+        local layerColorBlue01 <const> = defaults.layerColorBlue01
+        local layerColorBlue02 <const> = defaults.layerColorBlue02
+        local layerColorBlue03 <const> = defaults.layerColorBlue03
+        local layerColorAlpha <const> = defaults.layerColorAlpha
 
-        local cwVrf = math.max(2,
+        local cwVrf <const> = math.max(2,
             math.floor(0.5 + math.abs(cellWidth)))
-        local chVrf = math.max(2,
+        local chVrf <const> = math.max(2,
             math.floor(0.5 + math.abs(cellHeight)))
-        local headVrf = math.max(0,
+        local headVrf <const> = math.max(0,
             math.floor(0.5 + math.abs(headerHeight)))
-        local labelVrf = math.max(0,
+        local labelVrf <const> = math.max(0,
             math.floor(0.5 + math.abs(labelSize)))
 
-        local margin2 = margin + margin
-        local border2 = border + border
-        local colsn1 = cols - 1
-        local rowsn1 = rows - 1
-        local flatLen = rows * cols
+        local margin2 <const> = margin + margin
+        local border2 <const> = border + border
+        local colsn1 <const> = cols - 1
+        local rowsn1 <const> = rows - 1
+        local flatLen <const> = rows * cols
 
-        local useHeader = headVrf > 0
-        local useBkg = bkgClr.alpha > 0
-        local useBdr = borderClr.alpha > 0 and border > 0
-        local useLabel = labelVrf > 0
-        local oneFrame = frameReqs <= 1
+        local useHeader <const> = headVrf > 0
+        local useBkg <const> = bkgClr.alpha > 0
+        local useBdr <const> = borderClr.alpha > 0 and border > 0
+        local useLabel <const> = labelVrf > 0
+        local oneFrame <const> = frameReqs <= 1
         if not useBdr then border = 0 end
 
-        local xGridOffset = margin
+        local xGridOffset <const> = margin
         local yGridOffset = margin
         if useHeader then
             yGridOffset = margin
@@ -448,9 +438,9 @@ dlg:button {
         if rowsn1 ~= 0 then rowToGreen = 255.0 / rowsn1 end
         if colsn1 ~= 0 then colToRed = 255.0 / colsn1 end
 
-        local aHex = aChecker.rgbaPixel | 0xff000000
-        local bHex = bChecker.rgbaPixel | 0xff000000
-        local bkgHex = bkgClr.rgbaPixel | 0xff000000
+        local aHex <const> = aChecker.rgbaPixel | 0xff000000
+        local bHex <const> = bChecker.rgbaPixel | 0xff000000
+        local bkgHex <const> = bkgClr.rgbaPixel | 0xff000000
 
         -- Update whenever new elements are added to a cell.
         local wCellTotal = cwVrf + border2
@@ -465,7 +455,7 @@ dlg:button {
             end
         end
 
-        local spriteWidth = margin2
+        local spriteWidth <const> = margin2
             + wCellTotal * cols
             + padding * colsn1
         local spriteHeight = margin2
@@ -476,49 +466,60 @@ dlg:button {
                 + headVrf
                 + padding
         end
-        local activeSprite = Sprite(spriteWidth, spriteHeight)
-        local activeLayer = activeSprite.layers[1]
-        app.command.LoadPalette { preset = "default" }
 
-        local spriteSpec = activeSprite.spec
-        local checkSpec = ImageSpec(spriteSpec)
+        local activeSprite <const> = Sprite(spriteWidth, spriteHeight)
+        activeSprite.filename = "Grid"
+
+        app.transaction("Set Grid Bounds", function()
+            activeSprite.gridBounds = Rectangle(
+                xGridOffset, yGridOffset,
+                wCellTotal + padding,
+                hCellTotal + padding)
+        end)
+
+        if app.defaultPalette then
+            app.transaction("Set Palette", function()
+                activeSprite:setPalette(app.defaultPalette)
+            end)
+        end
+
+        local activeLayer <const> = activeSprite.layers[1]
+        local spriteSpec <const> = activeSprite.spec
+        local checkSpec <const> = ImageSpec(spriteSpec)
         checkSpec.width = cwVrf
         checkSpec.height = chVrf
-        local checkImage = Image(checkSpec)
+        local checkImage <const> = Image(checkSpec)
 
-        local validColorDiff = aHex ~= bHex
-        local validChecker = validColorDiff
+        local validColorDiff <const> = aHex ~= bHex
+        local validChecker <const> = validColorDiff
             and patternType == "RECTANGLE"
             and wCheck >= 1
             and hCheck >= 1
-        local validDiamond = validColorDiff
+        local validDiamond <const> = validColorDiff
             and (patternType == "DIAMOND"
                 or patternType == "RHOMBUS")
             and szDiam >= 4
 
-        local pxItr = checkImage:pixels()
+        local pxItr <const> = checkImage:pixels()
         if validDiamond then
             local yScale = 1
             if patternType == "RHOMBUS" then yScale = 2 end
-            local halfSize = szDiam * 0.5
-            local abs = math.abs
+            local halfSize <const> = szDiam * 0.5
+            local abs <const> = math.abs
             for pixel in pxItr do
-                local xPx = pixel.x - xCheck
-                local yPx = yScale * (pixel.y - yCheck)
-                local xLocal = xPx % szDiam
-                local yLocal = yPx % szDiam
-                local manhDist = abs(xLocal - halfSize)
+                local xPx <const> = pixel.x - xCheck
+                local yPx <const> = yScale * (pixel.y - yCheck)
+                local xLocal <const> = xPx % szDiam
+                local yLocal <const> = yPx % szDiam
+                local manhDist <const> = abs(xLocal - halfSize)
                     + abs(yLocal - halfSize)
-                local hex = bHex
-                if manhDist <= halfSize then
-                    hex = aHex
-                end
+                local hex <const> = manhDist <= halfSize and aHex or bHex
                 pixel(hex)
             end
         elseif validChecker then
             for pixel in pxItr do
-                local xPx = pixel.x - xCheck
-                local yPx = pixel.y - yCheck
+                local xPx <const> = pixel.x - xCheck
+                local yPx <const> = pixel.y - yCheck
                 local hex = bHex
                 if ((xPx // wCheck + yPx // hCheck) % 2) ~= 1 then
                     hex = aHex
@@ -555,55 +556,55 @@ dlg:button {
                 hLabel = labelVrf
             end
 
-            local labelSpec = ImageSpec(spriteSpec)
+            local labelSpec <const> = ImageSpec(spriteSpec)
             labelSpec.width = wLabel
             labelSpec.height = hLabel
             labelImage = Image(labelSpec)
 
             if labelClr.alpha > 0 then
-                local labelHex = labelClr.rgbaPixel | 0xff000000
+                local labelHex <const> = labelClr.rgbaPixel | 0xff000000
                 labelImage:clear(labelHex)
             end
         end
 
         local bdrImage = nil
         if useBdr then
-            local bdrHex = borderClr.rgbaPixel | 0xff000000
+            local bdrHex <const> = borderClr.rgbaPixel | 0xff000000
 
-            local bdrSpec = ImageSpec(spriteSpec)
-            local wBordered = cwVrf + border2
-            local hBordered = chVrf + border2
+            local bdrSpec <const> = ImageSpec(spriteSpec)
+            local wBordered <const> = cwVrf + border2
+            local hBordered <const> = chVrf + border2
             bdrSpec.width = wBordered
             bdrSpec.height = hBordered
             bdrImage = Image(bdrSpec)
 
-            local topRect = Rectangle(
+            local topRect <const> = Rectangle(
                 0, 0,
                 wBordered - border, border)
-            local topItr = bdrImage:pixels(topRect)
+            local topItr <const> = bdrImage:pixels(topRect)
             for pixel in topItr do pixel(bdrHex) end
 
-            local rgtRect = Rectangle(
+            local rgtRect <const> = Rectangle(
                 wBordered - border, 0,
                 border, hBordered - border)
-            local rgtItr = bdrImage:pixels(rgtRect)
+            local rgtItr <const> = bdrImage:pixels(rgtRect)
             for pixel in rgtItr do pixel(bdrHex) end
 
-            local btmRect = Rectangle(
+            local btmRect <const> = Rectangle(
                 border, hBordered - border,
                 wBordered - border, border)
-            local btmItr = bdrImage:pixels(btmRect)
+            local btmItr <const> = bdrImage:pixels(btmRect)
             for pixel in btmItr do pixel(bdrHex) end
 
-            local lftRect = Rectangle(
+            local lftRect <const> = Rectangle(
                 0, border,
                 border, hBordered - border)
-            local lftItr = bdrImage:pixels(lftRect)
+            local lftItr <const> = bdrImage:pixels(lftRect)
             for pixel in lftItr do pixel(bdrHex) end
         end
 
         local gridGroup = nil
-        app.transaction(function()
+        app.transaction("Create Grid Group", function()
             gridGroup = activeSprite:newGroup()
             gridGroup.name = string.format(
                 "Grid %d x %d",
@@ -614,10 +615,10 @@ dlg:button {
         end)
 
         local bkgLayer = nil
-        local bkgImage = Image(spriteSpec)
+        local bkgImage <const> = Image(spriteSpec)
         bkgImage:clear(bkgHex)
         if useBkg then
-            app.transaction(function()
+            app.transaction("Create Bkg", function()
                 bkgLayer = activeSprite:newLayer()
                 bkgLayer.name = "Bkg"
                 bkgLayer.parent = gridGroup
@@ -630,17 +631,17 @@ dlg:button {
         local headLayer = nil
         local headImage = nil
         if useHeader then
-            local headSpec = ImageSpec(spriteSpec)
+            local headSpec <const> = ImageSpec(spriteSpec)
             headSpec.width = wCellTotal * cols
                 + padding * colsn1
             headSpec.height = headVrf
             headImage = Image(headSpec)
             if headerClr.alpha > 0 then
-                local headHex = headerClr.rgbaPixel | 0xff000000
+                local headHex <const> = headerClr.rgbaPixel | 0xff000000
                 headImage:clear(headHex)
             end
 
-            app.transaction(function()
+            app.transaction("Create Header", function()
                 headLayer = activeSprite:newLayer()
                 headLayer.name = "Header"
                 headLayer.parent = gridGroup
@@ -651,34 +652,34 @@ dlg:button {
         end
 
         -- Cache methods used in loops.
-        local floor = math.floor
-        local strfmt = string.format
-        local transact = app.transaction
+        local floor <const> = math.floor
+        local strfmt <const> = string.format
+        local transact <const> = app.transaction
 
         ---@type Point[]
-        local labelPoints = {}
+        local labelPoints <const> = {}
         ---@type Layer[]
-        local labelLayers = {}
+        local labelLayers <const> = {}
 
         ---@type Point[]
-        local bdrPoints = {}
+        local bdrPoints <const> = {}
         ---@type Layer[]
-        local bdrLayers = {}
+        local bdrLayers <const> = {}
 
         ---@type Point[]
-        local checkPoints = {}
+        local checkPoints <const> = {}
         ---@type Layer[]
-        local checkLayers = {}
+        local checkLayers <const> = {}
 
         local row = rows
         while row > 0 do
             row = row - 1
 
-            local yOffset = yGridOffset + row * padding
-            local y = row * hCellTotal + yOffset
-            local green = floor(row * rowToGreen + 0.5)
+            local yOffset <const> = yGridOffset + row * padding
+            local y <const> = row * hCellTotal + yOffset
+            local green <const> = floor(row * rowToGreen + 0.5)
 
-            local rowColor = Color {
+            local rowColor <const> = Color {
                 r = 128,
                 g = green,
                 b = 0,
@@ -686,8 +687,8 @@ dlg:button {
             }
 
             local rowGroup = nil
-            local rowName = strfmt("Row %02d", 1 + row)
-            transact(function()
+            local rowName <const> = strfmt("Row %02d", 1 + row)
+            transact("Create Row", function()
                 rowGroup = activeSprite:newGroup()
                 rowGroup.name = rowName
                 rowGroup.parent = gridGroup
@@ -696,47 +697,42 @@ dlg:button {
                 rowGroup.color = rowColor
             end)
 
-            transact(function()
+            transact("Create Columns", function()
                 local col = cols
                 while col > 0 do
                     col = col - 1
 
-                    local xOffset = xGridOffset + col * padding
-                    local x = col * wCellTotal + xOffset
-                    local red = floor(col * colToRed + 0.5)
+                    local xOffset <const> = xGridOffset + col * padding
+                    local x <const> = col * wCellTotal + xOffset
+                    local red <const> = floor(col * colToRed + 0.5)
 
-                    local idxFlat = col + row * cols
-                    local idxReverse = flatLen - idxFlat
+                    local idxFlat <const> = col + row * cols
+                    local idxReverse <const> = flatLen - idxFlat
 
-                    local colColor = Color {
+                    local colColor <const> = Color {
                         r = red,
                         g = green,
                         b = 0,
                         a = layerColorAlpha
                     }
 
-                    local colGroup = nil
-                    colGroup = activeSprite:newGroup()
-                    colGroup.name = strfmt(
-                        "Column %02d %02d",
-                        1 + col, 1 + row)
+                    local colGroup <const> = activeSprite:newGroup()
+                    colGroup.name = strfmt("Column %02d %02d", 1 + col, 1 + row)
                     colGroup.parent = rowGroup
                     colGroup.isCollapsed = closeGroups
                     colGroup.isEditable = editGrid
                     colGroup.color = colColor
 
                     if useLabel then
-                        local labelColor = Color {
+                        local labelColor <const> = Color {
                             r = red,
                             g = green,
                             b = layerColorBlue03,
                             a = layerColorAlpha
                         }
 
-                        local labelLayer = nil
-                        labelLayer = activeSprite:newLayer()
-                        labelLayer.name = strfmt(
-                            "Label %04d", 1 + idxFlat)
+                        local labelLayer <const> = activeSprite:newLayer()
+                        labelLayer.name = strfmt("Label %04d", 1 + idxFlat)
                         labelLayer.parent = colGroup
                         labelLayer.isContinuous = oneFrame
                         labelLayer.opacity = opacity
@@ -749,17 +745,15 @@ dlg:button {
                         labelLayers[idxReverse] = labelLayer
                     end
 
-                    local checkColor = Color {
+                    local checkColor <const> = Color {
                         r = red,
                         g = green,
                         b = layerColorBlue02,
                         a = layerColorAlpha
                     }
 
-                    local checkLayer = nil
-                    checkLayer = activeSprite:newLayer()
-                    checkLayer.name = strfmt(
-                        "Checker %04d", 1 + idxFlat)
+                    local checkLayer <const> = activeSprite:newLayer()
+                    checkLayer.name = strfmt("Checker %04d", 1 + idxFlat)
                     checkLayer.parent = colGroup
                     checkLayer.isContinuous = oneFrame
                     checkLayer.isEditable = editGrid
@@ -772,17 +766,15 @@ dlg:button {
                     checkLayers[idxReverse] = checkLayer
 
                     if useBdr then
-                        local bdrColor = Color {
+                        local bdrColor <const> = Color {
                             r = red,
                             g = green,
                             b = layerColorBlue01,
                             a = layerColorAlpha
                         }
 
-                        local bdrLayer = nil
-                        bdrLayer = activeSprite:newLayer()
-                        bdrLayer.name = strfmt(
-                            "Border %04d", 1 + idxFlat)
+                        local bdrLayer <const> = activeSprite:newLayer()
+                        bdrLayer.name = strfmt("Border %04d", 1 + idxFlat)
                         bdrLayer.parent = colGroup
                         bdrLayer.isContinuous = oneFrame
                         bdrLayer.opacity = opacity
@@ -798,43 +790,49 @@ dlg:button {
             end)
         end
 
-        local firstFrame = activeSprite.frames[1]
-        local duration = 1.0 / math.max(1, fps)
+        local firstFrame <const> = activeSprite.frames[1]
+        local duration <const> = 1.0 / math.max(1, fps)
 
         if not oneFrame then
-            app.transaction(function()
+            app.transaction("Create Frames", function()
                 firstFrame.duration = duration
                 local g = 1
                 while g < frameReqs do
                     g = g + 1
-                    local frObj = activeSprite:newEmptyFrame()
+                    local frObj <const> = activeSprite:newEmptyFrame()
                     frObj.duration = duration
                 end
             end)
         else
-            firstFrame.duration = duration
+            app.transaction("Set Frame Duration", function()
+                firstFrame.duration = duration
+            end)
         end
 
-        local lenFrames = #activeSprite.frames
-        local gridFlat = cols * rows
+        local lenFrames <const> = #activeSprite.frames
+        local gridFlat <const> = cols * rows
 
         if useBkg then
-            app.transaction(function()
+            app.transaction("Create Bkg Cels", function()
                 local h = 0
                 while h < lenFrames do
                     h = h + 1
-                    activeSprite:newCel(bkgLayer, h, bkgImage)
+                    local bkgCel <const> = activeSprite:newCel(
+                        bkgLayer, h, bkgImage)
+                    bkgCel.zIndex = -32768
                 end
             end)
         end
 
         if useHeader then
-            local headLoc = Point(margin, margin)
-            app.transaction(function()
+            local headLoc <const> = Point(margin, margin)
+            app.transaction("Create Header Cels", function()
                 local h = 0
                 while h < lenFrames do
                     h = h + 1
-                    activeSprite:newCel(headLayer, h, headImage, headLoc)
+                    local headCel <const> = activeSprite:newCel(
+                        headLayer, h, headImage, headLoc)
+                    headCel.zIndex = -32767
                 end
             end)
         end
@@ -844,65 +842,57 @@ dlg:button {
             i = i + 1
 
             if useLabel then
-                local labelPoint = labelPoints[i]
-                local labelLayer = labelLayers[i]
+                local labelPoint <const> = labelPoints[i]
+                local labelLayer <const> = labelLayers[i]
 
-                app.transaction(function()
+                app.transaction("Create Label Cel", function()
                     local j = 0
                     while j < lenFrames do
                         j = j + 1
-                        activeSprite:newCel(
+                        local labelCel <const> = activeSprite:newCel(
                             labelLayer, j, labelImage, labelPoint)
+                        labelCel.zIndex = -32766
                     end
                 end)
             end
 
-            local checkPoint = checkPoints[i]
-            local checkLayer = checkLayers[i]
+            local checkPoint <const> = checkPoints[i]
+            local checkLayer <const> = checkLayers[i]
 
-            app.transaction(function()
+            app.transaction("Create Checker Cel", function()
                 local m = 0
                 while m < lenFrames do
                     m = m + 1
-                    activeSprite:newCel(
+                    local checkCel <const> = activeSprite:newCel(
                         checkLayer, m, checkImage, checkPoint)
+                    checkCel.zIndex = -32765
                 end
             end)
 
             if useBdr then
-                local bdrPoint = bdrPoints[i]
-                local bdrLayer = bdrLayers[i]
+                local bdrPoint <const> = bdrPoints[i]
+                local bdrLayer <const> = bdrLayers[i]
 
-                app.transaction(function()
+                app.transaction("Create Border Cel", function()
                     local k = 0
                     while k < lenFrames do
                         k = k + 1
-                        activeSprite:newCel(
+                        local bdrCel <const> = activeSprite:newCel(
                             bdrLayer, k, bdrImage, bdrPoint)
+                        bdrCel.zIndex = -32764
                     end
                 end)
             end
         end
 
-        activeSprite.filename = "Grid"
-        activeSprite.gridBounds = Rectangle(
-            xGridOffset, yGridOffset,
-            wCellTotal + padding,
-            hCellTotal + padding)
-
-        if app.apiVersion >= 23 then
-            app.frame = firstFrame
-            app.layer = activeLayer
-        else
-            app.activeFrame = firstFrame
-            app.activeLayer = activeLayer
-        end
+        app.frame = firstFrame
+        app.layer = activeLayer
 
         -- Onion skin defaults need to be adjusted to work well with grid.
         -- Position 1 is In front of sprite.
         -- Type 1 is Red/Blue Tint.
-        local docPrefs = app.preferences.document(activeSprite)
-        local onionSkinPrefs = docPrefs.onionskin
+        local docPrefs <const> = app.preferences.document(activeSprite)
+        local onionSkinPrefs <const> = docPrefs.onionskin
         onionSkinPrefs.loop_tag = false
         onionSkinPrefs.current_layer = true
         onionSkinPrefs.position = 1
@@ -923,4 +913,7 @@ dlg:button {
     end
 }
 
-dlg:show { wait = false }
+dlg:show {
+    autoscrollbars = true,
+    wait = false
+}

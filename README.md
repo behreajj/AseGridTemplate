@@ -22,16 +22,16 @@ This script creates a new sprite in RGB color mode. To convert to another color 
 
 It is intended for use in conjunction with the auto guide feature. The feature can be enabled by going to `View > Show > Auto Guides`. To display the guides, choose the [move tool](https://www.aseprite.org/docs/move-tool), then hold down the `Ctrl` key. This is the same key that engages `Auto Select Layer`. To change the guides' color, go to `Edit > Preferences`, then select the `Guides & Slices` section from the left-hand column.
 
-For the script to work with auto guides, each grid element must be contained by a separate [cel](https://www.aseprite.org/docs/cel). This is why the script creates nested [layer group](https://www.aseprite.org/docs/layer-group)s. To flatten the grid to a single layer, select "Grid" in the timeline, then go to `Layer > Flatten`.
+For the script to work with auto guides, each grid element must be contained in a separate [cel](https://www.aseprite.org/docs/cel). This is why the script creates nested [layer group](https://www.aseprite.org/docs/layer-group)s. To flatten the grid to a single layer, select "Grid" in the timeline, then go to `Layer > Flatten`.
 
 Each non-group layer is set to be [continuous](https://www.aseprite.org/docs/continuous-layers/). For the grid to persist across new frames, either click on the `+` button in the bottom right corner or go to `Frame > New Frame`. The grid will *not* persist if `Frame > New Empty Frame` is used.
 
-Grid elements are intended for reference only, such as positioning elements created and styled by the user. They are not intended for use as visual elements in themselves. For that reason, they default locked (not editable). A default, editable layer is left in the layer stack above the grid layer.
+Grid elements are intended for reference only, such as positioning elements created and styled by the user. They are not intended for use as visual elements in themselves. For that reason, they default to locked (not editable). A default, editable layer is left in the layer stack above the grid layer.
 
 If the same grid will be reused, it is recommended to save it as a template `.aseprite` file.
 
 ## Issues
 
-This script was tested in Aseprite version 1.2.40-x64 on Windows 10. Its user interface elements were tested with 100% screen scaling and 200% UI scaling.
+This script was tested in Aseprite version 1.3.2 on Windows 10. Its user interface elements were tested with 100% screen scaling and 200% UI scaling.
 
 Please report issues in the [Issues](https://github.com/behreajj/AseGridTemplate/issues) section on Github. When reporting, please include the version of Aseprite used.
