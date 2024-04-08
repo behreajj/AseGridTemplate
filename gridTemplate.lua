@@ -927,6 +927,13 @@ dlg:button {
                     onionSkinPrefs.position = 1
                     onionSkinPrefs.type = 1
                 end
+
+                local thumbPrefs <const> = docPrefs.thumbnails
+                if thumbPrefs then
+                    thumbPrefs.enabled = true
+                    thumbPrefs.zoom = 1
+                    thumbPrefs.overlay_enabled = true
+                end
             end
         end
 
