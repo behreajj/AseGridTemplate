@@ -467,7 +467,8 @@ dlg:button {
                 + padding
         end
 
-        -- Do not allow slices UI interface to be active.
+        -- As a precaution against crashes, do not allow slices UI interface
+        -- to be active.
         local appTool <const> = app.tool
         if appTool then
             local toolName <const> = appTool.id
@@ -486,11 +487,26 @@ dlg:button {
                 hCellTotal + padding)
         end)
 
-        if app.defaultPalette then
-            app.transaction("Set Palette", function()
-                activeSprite:setPalette(app.defaultPalette)
-            end)
-        end
+        -- Ase a precaution against any crashes, do not use defaultPalette.
+        app.transaction("Set Palette", function()
+            local palette <const> = activeSprite.palettes[1]
+            palette:resize(15)
+            palette:setColor(0, Color { r = 0, g = 0, b = 0, a = 0 })
+            palette:setColor(1, Color { r = 0, g = 0, b = 0, a = 255 })
+            palette:setColor(2, Color { r = 255, g = 255, b = 255, a = 255 })
+            palette:setColor(3, Color { r = 255, g = 0, b = 0, a = 255 })
+            palette:setColor(4, Color { r = 255, g = 145, b = 0, a = 255 })
+            palette:setColor(5, Color { r = 255, g = 255, b = 0, a = 255 })
+            palette:setColor(6, Color { r = 183, g = 255, b = 0, a = 255 })
+            palette:setColor(7, Color { r = 0, g = 255, b = 0, a = 255 })
+            palette:setColor(8, Color { r = 0, g = 255, b = 157, a = 255 })
+            palette:setColor(9, Color { r = 0, g = 255, b = 255, a = 255 })
+            palette:setColor(10, Color { r = 0, g = 169, b = 255, a = 255 })
+            palette:setColor(11, Color { r = 0, g = 0, b = 255, a = 255 })
+            palette:setColor(12, Color { r = 151, g = 0, b = 255, a = 255 })
+            palette:setColor(13, Color { r = 255, g = 0, b = 255, a = 255 })
+            palette:setColor(14, Color { r = 255, g = 0, b = 124, a = 255 })
+        end)
 
         local activeLayer <const> = activeSprite.layers[1]
         local spriteSpec <const> = activeSprite.spec
