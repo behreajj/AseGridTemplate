@@ -467,6 +467,15 @@ dlg:button {
                 + padding
         end
 
+        -- Do not allow slices UI interface to be active.
+        local appTool <const> = app.tool
+        if appTool then
+            local toolName <const> = appTool.id
+            if toolName == "slice" then
+                app.tool = "hand"
+            end
+        end
+
         local activeSprite <const> = Sprite(spriteWidth, spriteHeight)
         activeSprite.filename = "Grid"
 
