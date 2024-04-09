@@ -31,6 +31,7 @@ local defaults <const> = {
     headerHeight = 0,
     labelType = "BOTTOM",
     labelSize = 0,
+    genSlices = false,
     frames = 1,
     fps = 12,
     lockGrid = true,
@@ -337,6 +338,15 @@ dlg:slider {
 
 dlg:newrow { always = false }
 
+dlg:check {
+    id = "genSlices",
+    label = "Slices:",
+    selected = defaults.genSlices,
+    visible = true
+}
+
+dlg:newrow { always = false }
+
 dlg:button {
     id = "confirm",
     text = "&OK",
@@ -388,6 +398,8 @@ dlg:button {
             or defaults.frames --[[@as integer]]
         local fps <const> = args.fps
             or defaults.fps --[[@as integer]]
+
+        local genSlices = args.genSlices --[[@as boolean]]
 
         local aChecker <const> = args.aChecker --[[@as Color]]
         local bChecker <const> = args.bChecker --[[@as Color]]
@@ -905,6 +917,47 @@ dlg:button {
             end
         end
 
+        if genSlices then
+            local sliceColor = Color { r = 255, g = 255, b = 255, a = 255 }
+            local appPrefs <const> = app.preferences
+            if appPrefs then
+                local slicePrefs <const> = appPrefs.slices
+                if slicePrefs then
+                    local prefsColor <const> = slicePrefs.default_color --[[@as Color]]
+                    if prefsColor then
+                        if prefsColor.alpha > 0 then
+                            sliceColor = Color {
+                                r = prefsColor.red,
+                                g = prefsColor.green,
+                                b = prefsColor.blue,
+                                a = prefsColor.alpha,
+                            }
+                        end
+                    end
+                end
+            end
+
+            local slicePivot <const> = Point(cwVrf // 2, chVrf // 2)
+            local sliceInset <const> = Rectangle(0, 0, cwVrf, chVrf)
+
+            app.transaction("Create Slices", function()
+                local j = 0
+                while j < gridFlat do
+                    j = j + 1
+                    local sliceName <const> = strfmt("Slice %04d",
+                        gridFlat + 1 - j)
+                    local checkPoint <const> = checkPoints[j]
+                    local slice <const> = activeSprite:newSlice(Rectangle(
+                        checkPoint.x, checkPoint.y,
+                        cwVrf, chVrf))
+                    slice.name = sliceName
+                    slice.color = sliceColor
+                    slice.pivot = slicePivot
+                    slice.center = sliceInset
+                end
+            end)
+        end
+
         app.frame = firstFrame
         app.layer = activeLayer
 
@@ -932,7 +985,11 @@ dlg:button {
             end
         end
 
-        app.command.FitScreen()
+        -- Under Edit > Preferences > Editor, there's an option to fit to
+        -- screen on sprite open which seems to take care of this if users
+        -- wish. The issue is that different downsampling algorithms make
+        -- screen fit more or less preferable.
+        -- app.command.FitScreen()
         app.refresh()
         dlg:close()
     end
