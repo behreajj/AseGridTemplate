@@ -532,6 +532,7 @@ dlg:button {
                 or patternType == "RHOMBUS")
             and szDiam >= 4
 
+        -- TODO: Replace with string bytes...
         local pxItr <const> = checkImage:pixels()
         if validDiamond then
             local yScale = 1
@@ -601,8 +602,6 @@ dlg:button {
 
         local bdrImage = nil
         if useBdr then
-            local bdrHex <const> = borderClr.rgbaPixel | 0xff000000
-
             local bdrSpec <const> = ImageSpec(spriteSpec)
             local wBordered <const> = cwVrf + border2
             local hBordered <const> = chVrf + border2
@@ -610,34 +609,73 @@ dlg:button {
             bdrSpec.height = hBordered
             bdrImage = Image(bdrSpec)
 
-            local topRect <const> = Rectangle(
-                0, 0,
-                wBordered - border, border)
-            local topItr <const> = bdrImage:pixels(topRect)
-            for pixel in topItr do pixel(bdrHex) end
+            local highStr <const> = string.pack("B B B B",
+                borderClr.red,
+                borderClr.green,
+                borderClr.blue,
+                255)
+            local zeroStr <const> = string.pack("B B B B", 0, 0, 0, 0)
 
-            local rgtRect <const> = Rectangle(
-                wBordered - border, 0,
-                border, hBordered - border)
-            local rgtItr <const> = bdrImage:pixels(rgtRect)
-            for pixel in rgtItr do pixel(bdrHex) end
+            ---@type string[]
+            local byteStrs <const> = {}
+            local horizStripWeight <const> = cwVrf + border
+            local vertStripWeight <const> = chVrf + border
+            local horizStripArea <const> = border * horizStripWeight
+            local vertStripArea <const> = border * vertStripWeight
 
-            local btmRect <const> = Rectangle(
-                border, hBordered - border,
-                wBordered - border, border)
-            local btmItr <const> = bdrImage:pixels(btmRect)
-            for pixel in btmItr do pixel(bdrHex) end
+            -- Draw top and bottom horizontal strips.
+            local i = 0
+            while i < horizStripArea do
+                local xh <const> = i % horizStripWeight
+                local yh <const> = i // horizStripWeight
 
-            local lftRect <const> = Rectangle(
-                0, border,
-                border, hBordered - border)
-            local lftItr <const> = bdrImage:pixels(lftRect)
-            for pixel in lftItr do pixel(bdrHex) end
+                local xTop <const> = xh
+                local yTop <const> = yh
+                local idxTop <const> = xTop + yTop * wBordered
+                byteStrs[1 + idxTop] = highStr
+
+                local xBtm <const> = xh + border
+                local yBtm <const> = yh + vertStripWeight
+                local idxBtm <const> = xBtm + yBtm * wBordered
+                byteStrs[1 + idxBtm] = highStr
+
+                i = i + 1
+            end
+
+            local j = 0
+            while j < vertStripArea do
+                local x <const> = j % border
+                local y <const> = j // border
+
+                local xLft <const> = x
+                local yLft <const> = y + border
+                local idxLft <const> = xLft + yLft * wBordered
+                byteStrs[1 + idxLft] = highStr
+
+                local xRgt <const> = x + horizStripWeight
+                local yRgt <const> = y
+                local idxRgt <const> = xRgt + yRgt * wBordered
+                byteStrs[1 + idxRgt] = highStr
+
+                j = j + 1
+            end
+
+            -- Draw clear center.
+            local lenVrf <const> = cwVrf * chVrf
+            local k = 0
+            while k < lenVrf do
+                local x <const> = border + k % cwVrf
+                local y <const> = border + k // cwVrf
+                local idxCenter <const> = x + y * wBordered
+                byteStrs[1 + idxCenter] = zeroStr
+                k = k + 1
+            end
+
+            bdrImage.bytes = table.concat(byteStrs)
         end
 
-        local gridGroup = nil
-        app.transaction("Create Grid Group", function()
-            gridGroup = activeSprite:newGroup()
+        local gridGroup <const> = activeSprite:newGroup()
+        app.transaction("Set Grid Group Props", function()
             gridGroup.name = string.format(
                 "Grid %d x %d",
                 cols, rows)
@@ -646,12 +684,11 @@ dlg:button {
             gridGroup.isEditable = editGrid
         end)
 
-        local bkgLayer = nil
+        local bkgLayer <const> = activeSprite:newLayer()
         local bkgImage <const> = Image(spriteSpec)
         bkgImage:clear(bkgHex)
         if useBkg then
-            app.transaction("Create Bkg", function()
-                bkgLayer = activeSprite:newLayer()
+            app.transaction("Set Bkg Props", function()
                 bkgLayer.name = "Bkg"
                 bkgLayer.parent = gridGroup
                 bkgLayer.opacity = opacity
@@ -673,8 +710,8 @@ dlg:button {
                 headImage:clear(headHex)
             end
 
-            app.transaction("Create Header", function()
-                headLayer = activeSprite:newLayer()
+            headLayer = activeSprite:newLayer()
+            app.transaction("Set Header Props", function()
                 headLayer.name = "Header"
                 headLayer.parent = gridGroup
                 headLayer.opacity = opacity
@@ -718,10 +755,9 @@ dlg:button {
                 a = layerColorAlpha
             }
 
-            local rowGroup = nil
+            local rowGroup <const> = activeSprite:newGroup()
             local rowName <const> = strfmt("Row %02d", 1 + row)
-            transact("Create Row", function()
-                rowGroup = activeSprite:newGroup()
+            transact("Set Row Props", function()
                 rowGroup.name = rowName
                 rowGroup.parent = gridGroup
                 rowGroup.isCollapsed = closeGroups
@@ -856,7 +892,7 @@ dlg:button {
             end)
         end
 
-        if useHeader then
+        if useHeader and headLayer then
             local headLoc <const> = Point(margin, margin)
             app.transaction("Create Header Cels", function()
                 local h = 0
