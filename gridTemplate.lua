@@ -454,6 +454,12 @@ dlg:button {
         local bHex <const> = bChecker.rgbaPixel | 0xff000000
         local bkgHex <const> = bkgClr.rgbaPixel | 0xff000000
 
+        -- This has to be copied in case a color is chosen by index, then
+        -- the referenced color changes when new sprite is created.
+        local rBorderClr <const> = borderClr.red
+        local gBorderClr <const> = borderClr.green
+        local bBorderClr <const> = borderClr.blue
+
         -- Update whenever new elements are added to a cell.
         local wCellTotal = cwVrf + border2
         local hCellTotal = chVrf + border2
@@ -610,9 +616,9 @@ dlg:button {
             bdrImage = Image(bdrSpec)
 
             local highStr <const> = string.pack("B B B B",
-                borderClr.red,
-                borderClr.green,
-                borderClr.blue,
+                rBorderClr,
+                gBorderClr,
+                bBorderClr,
                 255)
             local zeroStr <const> = string.pack("B B B B", 0, 0, 0, 0)
 
@@ -642,6 +648,7 @@ dlg:button {
                 i = i + 1
             end
 
+            -- Draw left and right vertical strips.
             local j = 0
             while j < vertStripArea do
                 local x <const> = j % border
