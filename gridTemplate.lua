@@ -499,10 +499,16 @@ dlg:button {
         activeSprite.filename = "Grid"
 
         app.transaction("Set Grid Bounds", function()
+            local wGrid <const> = cols > 1
+                and wCellTotal + padding
+                or wCellTotal
+            local hGrid <const> = rows > 1
+                and hCellTotal + padding
+                or hCellTotal
+
             activeSprite.gridBounds = Rectangle(
                 xGridOffset, yGridOffset,
-                wCellTotal + padding,
-                hCellTotal + padding)
+                wGrid, hGrid)
         end)
 
         -- Ase a precaution against any crashes, do not use defaultPalette.
