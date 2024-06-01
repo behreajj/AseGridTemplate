@@ -1032,6 +1032,21 @@ dlg:button {
                     thumbPrefs.overlay_enabled = true
                 end
             end
+
+            -- This setting was defaulted at zero, so only one layer was
+            -- visible at a time.
+            local experimental <const> = appPrefs.experimental
+            if experimental then
+                local layerOpac <const> = experimental.nonactive_layers_opacity
+                if layerOpac and layerOpac == 0 then
+                    experimental.nonactive_layers_opacity = 255
+                end
+
+                local layerPrev <const> = experimental.nonactive_layers_opacity_preview
+                if layerPrev and layerPrev == 0 then
+                    experimental.nonactive_layers_opacity_preview = 255
+                end
+            end
         end
 
         -- Under Edit > Preferences > Editor, there's an option to fit to
