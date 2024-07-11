@@ -42,6 +42,12 @@ local defaults <const> = {
     layerColorAlpha = 85
 }
 
+---@param c Color
+---@return Color
+local function colorCopy(c)
+    return Color { r = c.red, g = c.green, b = c.blue, a = c.alpha }
+end
+
 local dlg <const> = Dialog { title = "Grid Template" }
 
 dlg:slider {
@@ -340,7 +346,8 @@ dlg:newrow { always = false }
 
 dlg:check {
     id = "genSlices",
-    label = "Slices:",
+    label = "Include:",
+    text = "&Slices",
     selected = defaults.genSlices,
     visible = true
 }
@@ -401,12 +408,26 @@ dlg:button {
 
         local genSlices = args.genSlices --[[@as boolean]]
 
-        local aChecker <const> = args.aChecker --[[@as Color]]
-        local bChecker <const> = args.bChecker --[[@as Color]]
-        local bkgClr <const> = args.bkgClr --[[@as Color]]
-        local borderClr <const> = args.borderClr --[[@as Color]]
-        local headerClr <const> = args.headerClr --[[@as Color]]
-        local labelClr <const> = args.labelClr --[[@as Color]]
+        local aCheckerRef <const> = args.aChecker --[[@as Color]]
+        local bCheckerRef <const> = args.bChecker --[[@as Color]]
+        local bkgClrRef <const> = args.bkgClr --[[@as Color]]
+        local borderClrRef <const> = args.borderClr --[[@as Color]]
+        local headerClrRef <const> = args.headerClr --[[@as Color]]
+        local labelClrRef <const> = args.labelClr --[[@as Color]]
+
+        local aChecker <const> = colorCopy(aCheckerRef)
+        local bChecker <const> = colorCopy(bCheckerRef)
+        local bkgClr <const> = colorCopy(bkgClrRef)
+        local borderClr <const> = colorCopy(borderClrRef)
+        local headerClr <const> = colorCopy(headerClrRef)
+        local labelClr <const> = colorCopy(labelClrRef)
+
+        aChecker.alpha = 255
+        bChecker.alpha = 255
+        bkgClr.alpha = 255
+        borderClr.alpha = 255
+        headerClr.alpha = 255
+        labelClr.alpha = 255
 
         local editGrid <const> = not defaults.lockGrid
         local closeGroups <const> = defaults.closeGroups
@@ -432,8 +453,8 @@ dlg:button {
         local flatLen <const> = rows * cols
 
         local useHeader <const> = headVrf > 0
-        local useBkg <const> = bkgClr.alpha > 0
-        local useBdr <const> = borderClr.alpha > 0 and border > 0
+        local useBkg <const> = bkgClrRef.alpha > 0
+        local useBdr <const> = borderClrRef.alpha > 0 and border > 0
         local useLabel <const> = labelVrf > 0
         local oneFrame <const> = frameReqs <= 1
         if not useBdr then border = 0 end
@@ -450,15 +471,9 @@ dlg:button {
         if rowsn1 ~= 0 then rowToGreen = 255.0 / rowsn1 end
         if colsn1 ~= 0 then colToRed = 255.0 / colsn1 end
 
-        local aHex <const> = aChecker.rgbaPixel | 0xff000000
-        local bHex <const> = bChecker.rgbaPixel | 0xff000000
-        local bkgHex <const> = bkgClr.rgbaPixel | 0xff000000
-
-        -- This has to be copied in case a color is chosen by index, then
-        -- the referenced color changes when new sprite is created.
-        local rBorderClr <const> = borderClr.red
-        local gBorderClr <const> = borderClr.green
-        local bBorderClr <const> = borderClr.blue
+        local aHex <const> = aChecker.rgbaPixel
+        local bHex <const> = bChecker.rgbaPixel
+        local bkgHex <const> = bkgClr.rgbaPixel
 
         -- Update whenever new elements are added to a cell.
         local wCellTotal = cwVrf + border2
@@ -495,7 +510,13 @@ dlg:button {
             end
         end
 
-        local activeSprite <const> = Sprite(spriteWidth, spriteHeight)
+        local spriteSpec <const> = ImageSpec {
+            width = spriteWidth,
+            height = spriteHeight,
+            colorMode = ColorMode.RGB,
+            transparentColor = 0
+        }
+        local activeSprite <const> = Sprite(spriteSpec)
         activeSprite.filename = "Grid"
 
         app.transaction("Set Grid Bounds", function()
@@ -514,21 +535,17 @@ dlg:button {
         -- Ase a precaution against any crashes, do not use defaultPalette.
         app.transaction("Set Palette", function()
             local palette <const> = activeSprite.palettes[1]
-            palette:resize(10)
+            palette:resize(7)
             palette:setColor(0, Color { r = 0, g = 0, b = 0, a = 0 })
-            palette:setColor(1, Color { r = 0, g = 0, b = 0, a = 255 })
-            palette:setColor(2, Color { r = 255, g = 255, b = 255, a = 255 })
-            palette:setColor(3, Color { r = 254, g = 91, b = 89, a = 255 })
-            palette:setColor(4, Color { r = 247, g = 165, b = 71, a = 255 })
-            palette:setColor(5, Color { r = 243, g = 206, b = 82, a = 255 })
-            palette:setColor(6, Color { r = 106, g = 205, b = 91, a = 255 })
-            palette:setColor(7, Color { r = 87, g = 185, b = 242, a = 255 })
-            palette:setColor(8, Color { r = 209, g = 134, b = 223, a = 255 })
-            palette:setColor(9, Color { r = 165, g = 165, b = 167, a = 255 })
+            palette:setColor(1, bkgClr)
+            palette:setColor(2, aChecker)
+            palette:setColor(3, bChecker)
+            palette:setColor(4, borderClr)
+            palette:setColor(5, headerClr)
+            palette:setColor(6, labelClr)
         end)
 
         local activeLayer <const> = activeSprite.layers[1]
-        local spriteSpec <const> = activeSprite.spec
         local checkSpec <const> = ImageSpec(spriteSpec)
         checkSpec.width = cwVrf
         checkSpec.height = chVrf
@@ -607,7 +624,7 @@ dlg:button {
             labelImage = Image(labelSpec)
 
             if labelClr.alpha > 0 then
-                local labelHex <const> = labelClr.rgbaPixel | 0xff000000
+                local labelHex <const> = labelClr.rgbaPixel
                 labelImage:clear(labelHex)
             end
         end
@@ -622,9 +639,9 @@ dlg:button {
             bdrImage = Image(bdrSpec)
 
             local highStr <const> = string.pack("B B B B",
-                rBorderClr,
-                gBorderClr,
-                bBorderClr,
+                borderClr.red,
+                borderClr.green,
+                borderClr.blue,
                 255)
             local zeroStr <const> = string.pack("B B B B", 0, 0, 0, 0)
 
@@ -719,7 +736,7 @@ dlg:button {
             headSpec.height = headVrf
             headImage = Image(headSpec)
             if headerClr.alpha > 0 then
-                local headHex <const> = headerClr.rgbaPixel | 0xff000000
+                local headHex <const> = headerClr.rgbaPixel
                 headImage:clear(headHex)
             end
 
@@ -975,12 +992,7 @@ dlg:button {
                     local prefsColor <const> = slicePrefs.default_color --[[@as Color]]
                     if prefsColor then
                         if prefsColor.alpha > 0 then
-                            sliceColor = Color {
-                                r = prefsColor.red,
-                                g = prefsColor.green,
-                                b = prefsColor.blue,
-                                a = prefsColor.alpha,
-                            }
+                            sliceColor = colorCopy(prefsColor)
                         end
                     end
                 end
@@ -1033,20 +1045,20 @@ dlg:button {
                 end
             end
 
-            -- This setting was defaulted at zero, so only one layer was
-            -- visible at a time.
-            local experimental <const> = appPrefs.experimental
-            if experimental then
-                local layerOpac <const> = experimental.nonactive_layers_opacity
-                if layerOpac and layerOpac == 0 then
-                    experimental.nonactive_layers_opacity = 255
-                end
+            -- This setting was defaulted at zero on one installation, which
+            -- made grid seem broken.
+            -- local experimental <const> = appPrefs.experimental
+            -- if experimental then
+            --     local layerOpac <const> = experimental.nonactive_layers_opacity
+            --     if layerOpac and layerOpac == 0 then
+            --         experimental.nonactive_layers_opacity = 255
+            --     end
 
-                local layerPrev <const> = experimental.nonactive_layers_opacity_preview
-                if layerPrev and layerPrev == 0 then
-                    experimental.nonactive_layers_opacity_preview = 255
-                end
-            end
+            --     local layerPrev <const> = experimental.nonactive_layers_opacity_preview
+            --     if layerPrev and layerPrev == 0 then
+            --         experimental.nonactive_layers_opacity_preview = 255
+            --     end
+            -- end
         end
 
         -- Under Edit > Preferences > Editor, there's an option to fit to
